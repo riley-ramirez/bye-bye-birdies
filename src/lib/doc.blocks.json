@@ -1,25 +1,7 @@
 [
   {
     "type": "html",
-    "html": "<p>SECOND DRAFT</p>"
-  },
-  {
-    "type": "shortcode",
-    "name": "VideoEmbed",
-    "attrs": {
-      "p": true,
-      "src": "videos/0_hero.mp4",
-      "alt": "bird on fence",
-      "size": "full",
-      "autoplay": "true",
-      "playsinline": "true",
-      "mute": "true",
-      "controls": "false"
-    }
-  },
-  {
-    "type": "html",
-    "html": "<p>HED: Bye Bye Birdies</p>\n<p>DEK: Six years after scientists reported that billions of birds vanished from the North American landscape since 1970, conservationists are still racing to reverse catastrophic losses that show no sign of slowing down. </p>"
+    "html": "<p>SECOND DRAFT</p>\n<p>HED: Bye Bye Birdies</p>\n<p>DEK: Six years after scientists reported that billions of birds vanished from the North American landscape since 1970, conservationists are still racing to reverse catastrophic losses that show no sign of slowing down. </p>"
   },
   {
     "type": "shortcode",

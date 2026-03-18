@@ -11,9 +11,28 @@
 Hard-code custom code that should appear BEFORE Google Doc here. 
 This code is in +page.svelte and can be manually coded using HTML or Svelte tags.
 -->
-<header class="container-fluid d-flex flex-column align-items-center justify-content-center vh-100 mb-4" style="background-image:url('hero-example.png');background-size:cover;background-position:center;">
-  <h1 class="text-white text-center display-1">Multimedia Template 2026</h1>
-  <p class="text-white fw-light text-center">This is an example of the 2026 <a class="text-light" href="https://github.com/jrue/multimedia-template-2026" target="_blank">multimedia template</a> using Svelte.<br> This topper (header) is hard coded in <code>+page.svelte</code> file, while the rest of the page is imported from a <a class="text-light" href="https://docs.google.com/document/d/1JaxRkCqZyeWIPwXXocAwUoFaPsqULiQI_Oiby_F0JZ8/edit?usp=sharing" target="_blank">Google Doc</a>.</p>
+<header class="container-fluid vh-100 mb-4 position-relative overflow-hidden">
+
+  <!-- Video -->
+  <video autoplay muted loop playsinline class="bg-video">
+    <source src="videos/0_hero.mp4" type="video/mp4">
+  </video>
+
+  <!-- Text content -->
+  <div class="hero-content text-white">
+    <h1 class="display-2">Bye Bye Birdies</h1>
+
+    <p class="fw-light">
+      Six years after scientists reported that billions of birds vanished from 
+      the North American landscape since 1970, conservationists are still racing 
+      to reverse catastrophic losses that show no sign of slowing down.
+    </p>
+
+    <p class="fw-light" style="font-size: smaller;">
+      By Riley Ramirez
+    </p>
+  </div>
+
 </header>
 
 
