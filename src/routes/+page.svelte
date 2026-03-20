@@ -20,9 +20,9 @@ This code is in +page.svelte and can be manually coded using HTML or Svelte tags
 
   <!-- Text content -->
   <div class="hero-content text-white">
-    <h1 class="display-2">Bye Bye Birdies</h1>
+    <h1 class="display-2 hero-title">Bye Bye Birdies</h1>
 
-    <p class="fw-light">
+   <p class="fw-light">
       Six years after scientists reported that billions of birds vanished from 
       the North American landscape since 1970, conservationists are still racing 
       to reverse catastrophic losses that show no sign of slowing down.
@@ -31,7 +31,7 @@ This code is in +page.svelte and can be manually coded using HTML or Svelte tags
     <p class="fw-light" style="font-size: smaller;">
       By Riley Ramirez
     </p>
-  </div>
+  </div> 
 
 </header>
 
