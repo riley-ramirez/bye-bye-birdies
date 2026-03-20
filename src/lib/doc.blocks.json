@@ -5,6 +5,15 @@
   },
   {
     "type": "shortcode",
+    "name": "animations",
+    "attrs": {}
+  },
+  {
+    "type": "html",
+    "html": ""
+  },
+  {
+    "type": "shortcode",
     "name": "Scrolly",
     "attrs": {
       "steps": [
@@ -12,25 +21,25 @@
           "img": "scrolly/1.3_scene_sunrise.mp4",
           "alt": "Sunrise from the passenger's seat",
           "pos": "center",
-          "text": "First block of text"
+          "text": "The sun has barely risen when Jessie Reese and the researchers from Bird Conservancy of the Rockies pull off onto a dirt track in the Chihuahuan Desert. "
         },
         {
           "img": "scrolly/1.3.3_binoculars.mp4",
           "alt": "binoculars on the dash",
           "pos": "center",
-          "text": "Second block of text"
+          "text": "It's their ninth consecutive day of searching for three key grassland bird species facing significant declines in their populations. "
         },
         {
           "img": "scrolly/1.3.4_sunrise.mp4",
           "alt": "Chihuahuan Desert Landscape",
           "pos": "center",
-          "text": "Third block of text"
+          "text": "The yellow-throated and rusty-necked Chestnut-collared Longspur, black-masked Horned Lark, and the brown-streaked Baird's Sparrow have each lost around 65 percent of their populations since 1970."
         },
         {
           "img": "scrolly/1.3.5_jessie_lookingoutwindow.mp4",
           "alt": "Jessie looking out window",
           "pos": "center",
-          "text": "Third block of text"
+          "text": "Reese started out studying birds in a similar fashion &mdash; with her head out of a car window, more than 15 years ago. "
         }
       ]
     }
