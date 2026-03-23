@@ -176,6 +176,47 @@ Scrolly shortcodes can only be done with block shortcodes and include the image 
 
 All of the images used in a scrolly shortcode should be placed in the `static/scrolly` folder.
 
+# Playing videos on demand with videoActionText
+
+By default, video backgrounds in a Scrolly section autoplay silently and loop. You can override this on any individual video step by adding a `videoActionText` field to that step's JSON object. When present, that step's video will not autoplay. Instead, a play button with your label appears inside the step's text box. Each video step manages its own state independently, so you can have some steps autoplay and others require a click.
+
+Once the video finishes, the button returns to the original `videoActionText` label and play icon. Clicking it restarts the video from the beginning. The button always stays visible — it never disappears.
+
+```plaintext
+[[Scrolly]]
+[
+  {
+    "img": "scrolly/intro.jpg",
+    "alt": "A still of the forest",
+    "pos": "center",
+    "text": "The forest had been quiet for decades."
+  },
+  {
+    "img": "scrolly/fire.mp4",
+    "alt": "Aerial footage of the wildfire",
+    "pos": "start",
+    "text": "Then, in the summer of 2023, it wasn't.",
+    "videoActionText": "Play video"
+  },
+  {
+    "img": "scrolly/river.mp4",
+    "alt": "Time-lapse of the river drying up",
+    "pos": "end",
+    "text": "The river that fed the valley had all but disappeared.",
+    "videoActionText": "Watch the time-lapse"
+  },
+  {
+    "img": "scrolly/aftermath.jpg",
+    "alt": "Charred landscape after the fire",
+    "pos": "center",
+    "text": "More than 10,000 acres were lost in a single week."
+  }
+]
+[[/Scrolly]]
+```
+
+In the example above, `intro.jpg` and `aftermath.jpg` are normal image steps. The two `.mp4` steps each have their own play button with independent play/replay state. The image steps are unaffected.
+
 ### DatawrapperEmbed
 
 This component lets you embed charts created on [Datawrapper](https://www.datawrapper.de/). Once the chart is published, under "Share & Embed", look at the "Embed code" section. Make sure the "Embed with script" option is selected. A piece of html starting with "div" appears. Check out the "id" tag,that looks like:  `id="datawrapper-vis-cY0Bb"`. Copy/paste that last string of letters after `datawrapper-vis-` (do not include the dash beforehand). This is the `id` attribute. 
