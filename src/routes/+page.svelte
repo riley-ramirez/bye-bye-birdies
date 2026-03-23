@@ -2,6 +2,8 @@
   import rawBlocks from '$lib/doc.blocks.json';
   import DocRenderer from '$lib/components/DocRenderer.svelte';
   import type { Block } from '$lib/components/DocRenderer.svelte';
+  import { base } from '$app/paths';
+
   const blocks = rawBlocks as Block[];
 </script>
 
@@ -15,7 +17,7 @@ This code is in +page.svelte and can be manually coded using HTML or Svelte tags
 
   <!-- Video -->
   <video autoplay muted loop playsinline class="bg-video">
-    <source src="videos/0_hero_stablized.mp4" type="video/mp4">
+    <source src="{base}/videos/0_hero_stabilized.mp4" type="video/mp4">
   </video>
 
   <!-- Text content -->
