@@ -68,8 +68,8 @@ html, body {
   font-family: 'Legitima', serif;
   position: absolute;
   color: white;
-  top: 60px;
-  left: 60px;
+  top: 70px;
+  left: 70px;
   z-index: 2;
   max-width: 500px;
 }
@@ -85,4 +85,18 @@ html, body {
   font-weight: 400;
   font-size: 5.5rem;
   letter-spacing: -1px;
+  line-height: 0.5;
+}
+
+.hero-title .line1 {
+  font-size: 5.5rem;   /* smaller top line */
+  letter-spacing: 3px;
+  display: block;
+}
+
+.hero-title .line2 {
+  font-size: 10rem;   /* bigger bottom line */
+  letter-spacing: 2px;
+  display: block;
+  margin-left: 3rem
 }
