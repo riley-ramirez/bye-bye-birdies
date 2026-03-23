@@ -176,7 +176,7 @@ Scrolly shortcodes can only be done with block shortcodes and include the image 
 
 All of the images used in a scrolly shortcode should be placed in the `static/scrolly` folder.
 
-# Playing videos on demand with videoActionText
+### Playing videos on demand with videoActionText
 
 By default, video backgrounds in a Scrolly section autoplay silently and loop. You can override this on any individual video step by adding a `videoActionText` field to that step's JSON object. When present, that step's video will not autoplay. Instead, a play button with your label appears inside the step's text box. Each video step manages its own state independently, so you can have some steps autoplay and others require a click.
 
