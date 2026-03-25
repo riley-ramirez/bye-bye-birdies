@@ -1,5 +1,23 @@
 @import "/fonts/fonts.css";
 
+.step .bg-body-secondary {
+  background-color: #06052D !important;
+  color: white;
+  border-radius: 0.5rem;
+  padding: 2rem;
+
+  max-width: 700px;
+  margin: 0 auto;
+}
+
+/* THIS is the important selector */
+.step .bg-body-secondary > * {
+  max-width: 600px;   /* controls line length */
+  width: 100%;
+  margin: 0 auto;     /* centers the text block */
+  text-align: left;
+}
+
 /*************
 Bootstrap configuration overrides must be BEFORE importing Bootstrap. 
 List of options here: https://getbootstrap.com/docs/5.3/customize/options/
@@ -100,3 +118,15 @@ html, body {
   display: block;
   margin-left: 3rem
 }
+
+.scrolly-bg {
+  background: black;
+}
+
+.layer {
+  will-change: opacity;
+  transform: translateZ(0);
+  backface-visibility: hidden;
+}
+
+
