@@ -32,7 +32,7 @@
   let scrollable = 0;
   let progress = 0;
 
-  const PX_PER_SECOND = 300;
+  const PX_PER_SECOND = 200;
 
   function updateScroll() {
     if (!container || !duration) return;
