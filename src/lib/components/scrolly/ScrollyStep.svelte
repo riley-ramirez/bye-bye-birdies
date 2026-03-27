@@ -23,6 +23,8 @@
 	 */
 	export let textBoxEl: HTMLElement | null = null;
 
+	export let overlay: 'dark' | undefined = undefined;
+
 	const dispatch = createEventDispatcher<{ videoplay: void }>();
 
 	$: label =
@@ -30,7 +32,7 @@
 </script>
 
 <div class="step" style={`min-height:${stepHeightVh}vh;`}>
-	<div class="container-fluid">
+	<div class="container-fluid" style="position: relative; z-index: 3;">
 		<div
 			class="row px-md-4 px-lg-5 align-items-start step-row"
 			class:start={step.pos === 'start'}
@@ -38,7 +40,7 @@
 			class:end={step.pos === 'end'}
 		>
 			<!-- text box — the parent binds this ref for scroll trigger computation -->
-			<div class={posClass} bind:this={textBoxEl}>
+			<div class={posClass} class:overlay-text={overlay === 'dark'} bind:this={textBoxEl}>
 				<!-- eslint-disable-next-line svelte/no-at-html-tags -->
 				{@html step.text}
 
@@ -97,4 +99,7 @@
 	.row.end {
 		justify-content: flex-end;
 	}
+    .overlay-text {
+        color: white;
+    }
 </style>

@@ -10,27 +10,54 @@
       "steps": [
         {
           "img": "scrolly/01_01_sunrise_expanded.mp4",
-          "alt": "Sunrise from the passenger's seat",
+          "alt": "Sunrise from the passenger&#39;s seat",
           "pos": "center",
-          "text": "The sun has barely risen when research scientist Jessie Reese and the researchers from Bird Conservancy of the Rockies pull off onto a dirt track in the Chihuahuan Desert."
+          "text": "The sun has barely risen when research scientist Jessie Reese and the researchers from Bird Conservancy of the Rockies pull off onto a dirt track in the Chihuahuan Desert.",
+          "kind": "video"
         },
         {
           "img": "scrolly/01_02_binoculars_wider.mp4",
           "alt": "binoculars on the dash",
           "pos": "center",
-          "text": "It's their ninth consecutive day of searching for key grassland bird species facing significant declines in their populations."
+          "text": "It&#39;s their ninth consecutive day of searching for key grassland bird species facing significant declines in their populations.",
+          "kind": "video"
         },
         {
           "img": "scrolly/1.3.4_sunrise.mp4",
           "alt": "Chihuahuan Desert Landscape",
           "pos": "center",
-          "text": "The team of biologists followed these tiny songbirds to their New Mexico wintering grounds in order to study the threats they are facing, as over the last 50 years, each species has lost between 60 to 70 percent of their populations."
+          "text": "The team of biologists followed these tiny songbirds to their New Mexico wintering grounds in order to study the threats they are facing, as over the last 50 years, each species has lost between 60 to 70 percent of their populations.",
+          "kind": "video"
         },
         {
           "img": "scrolly/01_05_window.mp4",
           "alt": "Jessie looking out window",
           "pos": "center",
-          "text": "As they near their worksite, Reese and avian ecologists, Nick Haddad and Kylie Lamoree, poke their heads out of the truck windows, carefully scanning the golden and dusty-green grasses for Chestnut-collared Longspurs, Horned Larks, Grasshopper Sparrows and Baird's Sparrows. "
+          "text": "As they near their worksite, Reese and avian ecologists, Nick Haddad and Kylie Lamoree, poke their heads out of the truck windows, carefully scanning the golden and dusty-green grasses for Chestnut-collared Longspurs, Horned Larks, Grasshopper Sparrows and Baird&#39;s Sparrows.",
+          "kind": "video"
+        },
+        {
+          "img": "scrolly/01_06_JRtakingphoto.mp4",
+          "alt": "Jessie taking photo",
+          "pos": "center",
+          "text": "Reese started out studying birds in a similar fashion &mdash; with her head out of a car window, more than 15 years ago.",
+          "kind": "video"
+        },
+        {
+          "img": "scrolly/landscape.jpg",
+          "alt": "",
+          "pos": "center",
+          "text": "But that world is currently being threatened as across North America, grasslands and the birds that depend on them are rapidly vanishing, data shows.",
+          "kind": "image",
+          "overlay": "dark"
+        },
+        {
+          "img": "scrolly/landscape.jpg",
+          "alt": "",
+          "pos": "center",
+          "text": "These ground-dwelling birds are vital to the health and sustainability of the Great Plains, providing essential ecological services such as pest control, seed dispersal, nutrient cycling and pollination.",
+          "kind": "image",
+          "overlay": "dark"
         }
       ]
     }
@@ -48,25 +75,29 @@
           "img": "scrolly/03_01_birding_compressed.mp4",
           "alt": "Sunrise from the passenger's seat",
           "pos": "center",
-          "text": "The sun has barely risen when Jessie Reese and the researchers from Bird Conservancy of the Rockies pull off onto a dirt track in the Chihuahuan Desert. "
+          "text": "The sun has barely risen when Jessie Reese and the researchers from Bird Conservancy of the Rockies pull off onto a dirt track in the Chihuahuan Desert. ",
+          "kind": "video"
         },
         {
           "img": "scrolly/03_02_grassID.mp4",
           "alt": "binoculars on the dash",
           "pos": "center",
-          "text": "It's their ninth consecutive day of searching for three key grassland bird species facing significant declines in their populations. "
+          "text": "It's their ninth consecutive day of searching for three key grassland bird species facing significant declines in their populations. ",
+          "kind": "video"
         },
         {
           "img": "scrolly/03_03_sophie-2.mp4",
           "alt": "Chihuahuan Desert Landscape",
           "pos": "center",
-          "text": "The yellow-throated and rusty-necked Chestnut-collared Longspur, black-masked Horned Lark, and the brown-streaked Baird's Sparrow have each lost around 65 percent of their populations since 1970."
+          "text": "The yellow-throated and rusty-necked Chestnut-collared Longspur, black-masked Horned Lark, and the brown-streaked Baird's Sparrow have each lost around 65 percent of their populations since 1970.",
+          "kind": "video"
         },
         {
           "img": "scrolly/04_01_milkjugs.mp4",
           "alt": "Jessie looking out window",
           "pos": "center",
-          "text": "Reese started out studying birds in a similar fashion &mdash; with her head out of a car window, more than 15 years ago. "
+          "text": "Reese started out studying birds in a similar fashion &mdash; with her head out of a car window, more than 15 years ago. ",
+          "kind": "video"
         }
       ]
     }
@@ -96,25 +127,29 @@
           "img": "scrolly/4.1.2_dataviz.mp4",
           "alt": "This is a Chestnut-collared Longspur",
           "pos": "center",
-          "text": "Second block of text"
+          "text": "Second block of text",
+          "kind": "video"
         },
         {
           "img": "scrolly/4.2_4.3.mp4",
           "alt": "This is a Chestnut-collared Longspur",
           "pos": "center",
-          "text": "Third block of text"
+          "text": "Third block of text",
+          "kind": "video"
         },
         {
           "img": "scrolly/4.5_animation.mp4",
           "alt": "Motus Tag",
           "pos": "center",
-          "text": "Fourth block of text"
+          "text": "Fourth block of text",
+          "kind": "video"
         },
         {
           "img": "scrolly/4.6_animation.mp4",
           "alt": "Chihuahuan Desert Landscape",
           "pos": "center",
-          "text": "Fifth block of text"
+          "text": "Fifth block of text",
+          "kind": "video"
         }
       ]
     }

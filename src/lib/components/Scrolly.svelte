@@ -317,11 +317,12 @@
 	>
 		<!-- Sticky background: one layer per step, CSS-driven crossfade via opacity -->
 		<div
-			class={'scrolly-bg ' + (released ? 'unstick' : '')}
-			role="img"
-			aria-label={activeAlt}
-			style="height: 100vh; width: 100vw;"
-		>
+      class={'scrolly-bg ' + (released ? 'unstick' : '')}
+      class:blurred={resolvedSteps[bgIndex]?.overlay === 'dark'}
+      role="img"
+      aria-label={activeAlt}
+      style="height: 100vh; width: 100vw;"
+    >
 			{#each resolvedSteps as step, i (i)}
 				{@const m = toMedia(step)}
 				<div class="layer" class:active={i === bgIndex} aria-hidden="true">
@@ -345,20 +346,27 @@
 					{/if}
 				</div>
 			{/each}
+      {#if resolvedSteps[bgIndex]?.overlay === 'dark'}
+          <div class="dark-overlay" aria-hidden="true"></div>
+      {/if}
 		</div>
 
 		<!-- Scrolling steps -->
 		<div class="scrolly-steps">
 			{#each resolvedSteps as step, i (i)}
 				<ScrollyStep
-					{step}
-					{stepHeightVh}
-					posClass={POS_CLASS[step.pos ?? 'center']}
-					vState={videoStates[i] ?? 'idle'}
-					hasVideoButton={stepHasVideoButton(i)}
-					bind:textBoxEl={textBoxEls[i]}
-					on:videoplay={() => handleStepVideoPlay(i)}
-				/>
+            {step}
+            {stepHeightVh}
+            posClass={step.overlay === 'dark'
+              ? POS_CLASS[step.pos ?? 'center'].replace('bg-body-secondary ', '')
+              : POS_CLASS[step.pos ?? 'center']}
+            vState={videoStates[i] ?? 'idle'}
+            hasVideoButton={stepHasVideoButton(i)}
+            overlay={step.overlay}
+            isActive={i === bgIndex}
+            bind:textBoxEl={textBoxEls[i]}
+            on:videoplay={() => handleStepVideoPlay(i)}
+        />
 			{/each}
 		</div>
 	</section>
@@ -410,7 +418,21 @@
 
 	/* Steps sit above the sticky background */
 	.scrolly-steps {
-		position: relative;
-		z-index: 1;
-	}
+    position: relative;
+    z-index: 2;
+  }
+
+  .scrolly-bg.blurred .media {
+    filter: blur(4px);
+    transform: scale(1.05);
+  }
+
+  .dark-overlay {
+    position: absolute;
+    inset: 0;
+    background: black;
+    opacity: 0.6;
+    pointer-events: none;
+    z-index: 1;
+  }
 </style>

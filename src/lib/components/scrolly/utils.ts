@@ -12,6 +12,7 @@ export type Step = {
 	// label is rendered in the text box. After the video ends the button switches
 	// to "Replay". Each video step manages its own play/replay state independently.
 	videoActionText?: string;
+	overlay?: 'dark';
 };
 
 export type MediaKind = 'image' | 'video';
@@ -116,7 +117,8 @@ export function tryParseStepsFromBodyHtml(html: string | undefined): Step[] | nu
 				text: typeof x.text === 'string' ? x.text : '',
 				kind: x.kind === 'image' || x.kind === 'video' ? x.kind : undefined,
 				videoActionText:
-					typeof x.videoActionText === 'string' ? x.videoActionText : undefined
+					typeof x.videoActionText === 'string' ? x.videoActionText : undefined,
+				overlay: (x.overlay === 'dark' ? 'dark' : undefined) as 'dark' | undefined
 			}))
 			.filter((s) => s.img && s.text);
 

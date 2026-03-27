@@ -307,7 +307,10 @@ function compilePairedScrolly(block) {
 				img: typeof x.img === 'string' ? x.img : '',
 				alt: typeof x.alt === 'string' ? x.alt : undefined,
 				pos: x.pos === 'start' || x.pos === 'center' || x.pos === 'end' ? x.pos : 'center',
-				text: typeof x.text === 'string' ? x.text : ''
+				text: typeof x.text === 'string' ? x.text : '',
+				kind: x.kind === 'image' || x.kind === 'video' ? x.kind : undefined,
+				videoActionText: typeof x.videoActionText === 'string' ? x.videoActionText : undefined,
+				overlay: x.overlay === 'dark' ? 'dark' : undefined
 			}))
 			.filter((s) => s.img && s.text);
 
