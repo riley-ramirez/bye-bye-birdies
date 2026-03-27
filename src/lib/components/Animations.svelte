@@ -1,6 +1,8 @@
 <script lang="ts">
 	import { onMount } from 'svelte';
 	// DocRenderer passes these from the shortcode attrs
+    import { base } from '$app/paths';
+
 	export let src: string = '';
 	export let bodyText: string = '';
 	// Parse src from bodyText if src wasn't passed directly
