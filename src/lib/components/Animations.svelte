@@ -14,7 +14,7 @@
 			console.error('Animations: could not parse bodyText', e);
 		}
 	}
-	const PX_PER_SECOND = 500;
+	const PX_PER_SECOND = 400;
 	let container: HTMLDivElement;
 	let video: HTMLVideoElement;
 	let duration = 0;
@@ -25,23 +25,40 @@
 		const progress = Math.min(Math.max(-top / (height - window.innerHeight), 0), 1);
 		video.currentTime = progress * duration;
 	}
-	onMount(() => {
-		video.addEventListener(
-			'loadedmetadata',
-			() => {
-				duration = video.duration;
-				scrollHeight = duration * PX_PER_SECOND + window.innerHeight;
-				scrub();
-			},
-			{ once: true }
-		);
-		window.addEventListener('scroll', scrub, { passive: true });
-		window.addEventListener('resize', scrub, { passive: true });
-		return () => {
-			window.removeEventListener('scroll', scrub);
-			window.removeEventListener('resize', scrub);
-		};
-	});
+	
+    let cleanup: (() => void) | null = null;
+    let initialized = false;
+
+    function setupVideo() {
+        if (!video || !src || initialized) return;
+        initialized = true;
+
+        video.addEventListener(
+            'loadedmetadata',
+            () => {
+                duration = video.duration;
+                scrollHeight = duration * PX_PER_SECOND + window.innerHeight;
+                scrub();
+            },
+            { once: true }
+        );
+
+        video.load();
+
+        window.addEventListener('scroll', scrub, { passive: true });
+        window.addEventListener('resize', scrub, { passive: true });
+
+        cleanup = () => {
+            window.removeEventListener('scroll', scrub);
+            window.removeEventListener('resize', scrub);
+        };
+    }
+
+    onMount(() => {
+        return () => cleanup?.();
+    });
+
+    $: if (src && video) setupVideo();
 </script>
 
 <div class="scrolly" bind:this={container} style="height: {scrollHeight}px;">

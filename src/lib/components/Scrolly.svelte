@@ -376,7 +376,6 @@
 		left: 0;
 		overflow: hidden;
 		z-index: 0;
-		margin-bottom: 2rem;
 	}
 
 	/* One layer per step; CSS transition handles the crossfade */
