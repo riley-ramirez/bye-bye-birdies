@@ -1,6 +1,6 @@
 <script lang="ts">
+	import { base } from "$app/paths";
   import { onMount } from "svelte";
-  import { base } from '$app/paths';
 
   // DocRenderer passes these from the shortcode attrs
   export let src: string = '';
@@ -10,7 +10,7 @@
   $: if (!src && bodyText) {
     try {
       const parsed = JSON.parse(bodyText);
-      src = '/' + (parsed.img ?? '');
+      src = base + '/' + (parsed.img ?? '');
     } catch (e) {
       console.error('Animations: could not parse bodyText', e);
     }
