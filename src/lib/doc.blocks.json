@@ -79,8 +79,8 @@
     "type": "shortcode",
     "name": "AnimationsOriginal",
     "attrs": {
-      "bodyHtml": "</p>\n<p>{</p>\n<p>&nbsp; &nbsp;&quot;img&quot;: &quot;scrolly/4.1_animation.mp4&quot;,</p>\n<p>&nbsp; &nbsp;&quot;kind&quot;: &quot;video&quot;</p>\n<p>}</p>\n<p>",
-      "bodyText": "{\n   \"img\": \"scrolly/4.1_animation.mp4\",\n   \"kind\": \"video\"\n}"
+      "bodyHtml": "</p>\n<p>{</p>\n<p>&nbsp; &nbsp;&quot;img&quot;: &quot;{base}/scrolly/4.1_animation.mp4&quot;,</p>\n<p>&nbsp; &nbsp;&quot;kind&quot;: &quot;video&quot;</p>\n<p>}</p>\n<p>",
+      "bodyText": "{\n   \"img\": \"{base}/scrolly/4.1_animation.mp4\",\n   \"kind\": \"video\"\n}"
     }
   },
   {
