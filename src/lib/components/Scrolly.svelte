@@ -135,10 +135,19 @@
 		if (clamped === bgIndex && loadedIndices.has(clamped)) return;
 
 		// Leaving a video-button step: pause and reset so returning won't autoplay.
-		if (stepHasVideoButton(bgIndex)) {
-			videoEls[bgIndex]?.pause();
-			videoStates = { ...videoStates, [bgIndex]: 'idle' };
-		}
+	  // if (stepHasVideoButton(bgIndex)) {
+		//	videoEls[bgIndex]?.pause();
+		//	videoStates = { ...videoStates, [bgIndex]: 'idle' };
+    //} --- Riley's changes ----
+
+    // Pause the outgoing step's video (button-controlled or free-looping).
+    const prevEl = videoEls[bgIndex];
+    if (prevEl) {
+        prevEl.pause();
+    }
+    if (stepHasVideoButton(bgIndex)) {
+        videoStates = { ...videoStates, [bgIndex]: 'idle' };
+    }
 
 		// Expand the load window to ±1 around the new index.
 		// Never shrinks — already-loaded media stays in the DOM for instant back-navigation.
