@@ -363,7 +363,6 @@
             vState={videoStates[i] ?? 'idle'}
             hasVideoButton={stepHasVideoButton(i)}
             overlay={step.overlay}
-            isActive={i === bgIndex}
             bind:textBoxEl={textBoxEls[i]}
             on:videoplay={() => handleStepVideoPlay(i)}
         />
