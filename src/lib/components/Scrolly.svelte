@@ -128,11 +128,27 @@
 
 	// ---- Step transition ----
 
+	function isSectionInView(): boolean {
+		if (!sectionEl) return false;
+		const rect = sectionEl.getBoundingClientRect();
+		return rect.top < window.innerHeight && rect.bottom > 0;
+	}
+
 	async function showStep(newIndex: number) {
 		if (!resolvedSteps.length) return;
 
 		const clamped = Math.max(0, Math.min(newIndex, resolvedSteps.length - 1));
-		if (clamped === bgIndex && loadedIndices.has(clamped)) return;
+		if (clamped === bgIndex && loadedIndices.has(clamped)) {
+			// Step unchanged — ensure video plays once section scrolls into view.
+			if (isSectionInView()) {
+				const el = videoEls[clamped];
+				if (el) {
+					el.loop = false;
+					await ensureVideoPlaying(el, clamped);
+				}
+			}
+			return;
+		}
 
 		// Leaving a video-button step: pause and reset so returning won't autoplay.
 	  // if (stepHasVideoButton(bgIndex)) {
@@ -140,10 +156,11 @@
 		//	videoStates = { ...videoStates, [bgIndex]: 'idle' };
     //} --- Riley's changes ----
 
-    // Pause the outgoing step's video (button-controlled or free-looping).
+    // Stop the outgoing step's video and reset to start.
     const prevEl = videoEls[bgIndex];
     if (prevEl) {
         prevEl.pause();
+        prevEl.currentTime = 0;
     }
     if (stepHasVideoButton(bgIndex)) {
         videoStates = { ...videoStates, [bgIndex]: 'idle' };
@@ -165,7 +182,7 @@
 
 		const el = videoEls[clamped];
 		if (el) {
-			el.loop = !resolvedSteps[clamped].videoActionText;
+			el.loop = false;
 			await ensureVideoPlaying(el, clamped);
 		}
 	}
@@ -219,6 +236,14 @@
 
 		if (carryOut && !prevCarryOut) {
 			released = true;
+			const el = videoEls[bgIndex];
+			if (el) {
+				el.pause();
+				el.currentTime = 0;
+				if (stepHasVideoButton(bgIndex)) {
+					videoStates = { ...videoStates, [bgIndex]: 'idle' };
+				}
+			}
 		}
 
 		if (!carryOut && prevCarryOut) {
@@ -283,14 +308,6 @@
 
 				nearViewport = true;
 				loadedIndices = new Set([0, 1].filter((i) => i < resolvedSteps.length));
-
-				await tick();
-
-				const el = videoEls[0];
-				if (el) {
-					el.loop = !resolvedSteps[0]?.videoActionText;
-					await ensureVideoPlaying(el, 0);
-				}
 
 				onScrollOrResize();
 			},
