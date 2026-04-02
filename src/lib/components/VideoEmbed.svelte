@@ -1,5 +1,7 @@
 <!-- src/lib/components/VideoEmbed.svelte -->
 <script lang="ts">
+  import { base } from '$app/paths';
+
   export let src: string | undefined;
 
   export let title: string = '';
@@ -90,13 +92,10 @@
   }
 
   function normalizeStaticPath(raw: string) {
-    // If it's already absolute http(s), keep it.
     const s = raw.trim();
     if (/^https?:\/\//i.test(s)) return s;
-
-    // Otherwise assume in /static (served at /...)
-    if (s.startsWith('/')) return s;
-    return '/' + s;
+    if (s.startsWith('/')) return `${base}${s}`;
+    return `${base}/${s}`;
   }
 
   type Resolved =
