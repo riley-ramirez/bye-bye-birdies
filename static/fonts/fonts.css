@@ -149,3 +149,11 @@
   font-weight: 400;
   src: url('/fonts/legitima/Legitima-Italic.woff2') format('woff2');
 }
+
+@font-face {
+  font-display: swap;
+  font-family: 'Azeret Mono';
+  font-style: normal;
+  font-weight: 600;
+  src: url('/fonts/azeret-mono/AzeretMono-Regular.tff') format('tff');
+}
