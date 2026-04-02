@@ -374,6 +374,7 @@
 <style>
 	.scrolly {
 		position: relative;
+		margin-top: 3rem;
 	}
 
 	/* Sticky by default */

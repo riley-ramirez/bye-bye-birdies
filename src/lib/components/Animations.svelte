@@ -74,6 +74,7 @@
 		width: 100vw;
 		margin-left: calc(50% - 50vw);
 		position: relative;
+		margin-bottom: 3rem;
 	}
 	.sticky {
 		position: sticky;

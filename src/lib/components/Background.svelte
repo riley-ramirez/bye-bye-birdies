@@ -97,5 +97,7 @@
     position: relative;
     left: 50%;
     transform: translateX(-50%);
+    /* margin-bottom: 3rem; */
+    /* padding: 4rem 0; */
   }
 </style>

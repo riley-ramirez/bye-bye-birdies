@@ -13,7 +13,7 @@
 Hard-code custom code that should appear BEFORE Google Doc here. 
 This code is in +page.svelte and can be manually coded using HTML or Svelte tags.
 -->
-<header class="container-fluid vh-100 mb-4 position-relative overflow-hidden">
+<header class="container-fluid vh-100 position-relative overflow-hidden">
 
   <!-- Video -->
   <video autoplay muted loop playsinline class="bg-video">

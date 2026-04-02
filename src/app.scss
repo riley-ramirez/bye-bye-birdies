@@ -31,13 +31,13 @@ $font-size-base: 1.1rem;
 $font-weight-base: 400;
 $line-height-base: 1.6;
 
-$headings-font-family: 'Roboto Slab', 'Lato', serif;
+$headings-font-family: 'Georgia', 'Times New Roman', serif;
 $headings-font-style: null;
 $headings-font-weight: 500;
 $headings-line-height: 1.2;
-$headings-color: #404040;
+$headings-color: #181818;
 
-$display-font-family: 'Crimson Text', 'Roboto Slab', Garamond, 'Times New Roman', serif;
+$display-font-family: 'Times New Roman', serif;
 $display-font-style:  null;
 $display-font-weight: 300;
 $display-line-height: $headings-line-height;
@@ -128,6 +128,11 @@ html, body {
   will-change: opacity;
   transform: translateZ(0);
   backface-visibility: hidden;
+}
+
+.doc-html-block {
+  padding-top: 2rem;
+  padding-bottom: 2rem;
 }
 
 
