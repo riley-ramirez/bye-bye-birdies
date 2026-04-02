@@ -1,4 +1,5 @@
 <script lang="ts">
+  import { base } from '$app/paths';
   import VideoEmbed from '$lib/components/VideoEmbed.svelte';
 
   export let img = '';
@@ -52,7 +53,7 @@
   $: chunks = parseChunks(bodyHtml);
 </script>
 
-<div class="background-section" style="background-image: url('{img}')">
+<div class="background-section" style="background-image: url('{base}/{img}')">
   <div class="container">
     <div class="row justify-content-center">
       <div class="col-12 col-sm-10 col-lg-8 col-xxl-6">
