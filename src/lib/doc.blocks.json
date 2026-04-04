@@ -13,7 +13,7 @@
   },
   {
     "type": "html",
-    "html": "<h1>Headline</h1>\n<p>By Riley Ramirez</p>"
+    "html": "<h2>As grassland birds vanish, scientists look to radio technology to save them</h2>\n<p>By Riley Ramirez</p>"
   },
   {
     "type": "shortcode",
@@ -60,7 +60,7 @@
           "pos": "center",
           "overlay": "dark",
           "pause": true,
-          "overlayVideo": "/scrolly/03_03_sophie-2.mp4",
+          "overlayVideo": "scrolly/03_03_sophie-2.mp4",
           "text": ""
         },
         {
