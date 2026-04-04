@@ -1,12 +1,13 @@
 @import "/fonts/fonts.css";
 
 .step .bg-body-secondary {
-  background-color: rgba(15, 20, 94, 0.8) !important; /* 80% opacity */
+  background-color: rgba(17, 56, 149, 0.8) !important; /* 80% opacity */
   color: white;
   border-radius: 0.5rem;
   padding: 2rem;
+  font-size: 20px;
 
-  max-width: 700px;
+  max-width: 900px;
   margin: 0 auto;
 }
 

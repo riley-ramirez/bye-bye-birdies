@@ -14,7 +14,7 @@
 			console.error('Animations: could not parse bodyText', e);
 		}
 	}
-	const PX_PER_SECOND = 400;
+	const PX_PER_SECOND = 900;
 	let container: HTMLDivElement;
 	let video: HTMLVideoElement;
 	let duration = 0;
