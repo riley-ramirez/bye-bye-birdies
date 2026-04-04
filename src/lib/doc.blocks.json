@@ -41,32 +41,34 @@
       "steps": [
         {
           "img": "scrolly/03_01_birding_compressed.mp4",
+          "kind": "video",
           "alt": "Sunrise from the passenger's seat",
           "pos": "center",
-          "text": "For the past three winters, field crews from Bird Conservancy have traveled to New Mexico to tag and monitor grassland birds on their non-breeding grounds using radio tracking technology. After arriving at their worksite, Reese and her team layer up to spend the first hour of their day scouting out bird behavior in the area to determine the best spot for their mist nets &mdash; regularly pausing to admire the different grasses and the vast open space that engulfed them.",
-          "kind": "video"
+          "text": "For the past three winters, field crews from Bird Conservancy have traveled to New Mexico to tag and monitor grassland birds on their non-breeding grounds using radio tracking technology. After arriving at their worksite, Reese and her team layer up to spend the first hour of their day scouting out bird behavior in the area to determine the best spot for their mist nets &mdash; regularly pausing to admire the different grasses and the vast open space that engulfed them."
         },
         {
           "img": "scrolly/03_02_grassID.mp4",
-          "alt": "binoculars on the dash",
-          "pos": "center",
-          "text": "Crew leader Sophie Barno and George Kinney &mdash; who could both identify nearly every type of grass by name &mdash; had been to this exact site the previous year. They noticed stark differences in the diversity of grasses and birds present. The change, they believe, was largely due to heavy rainfall in the state last summer.",
-          "kind": "video"
-        },
-        {
-          "img": "scrolly/03_02_grassID.mp4",
-          "alt": "binoculars on the dash",
-          "pos": "center",
-          "text": "false",
           "kind": "video",
-          "overlay": "dark"
+          "alt": "binoculars on the dash",
+          "pos": "center",
+          "text": "Crew leader Sophie Barno and George Kinney &mdash; who could both identify nearly every type of grass by name &mdash; had been to this exact site the previous year. They noticed stark differences in the diversity of grasses and birds present. The change, they believe, was largely due to heavy rainfall in the state last summer."
+        },
+        {
+          "img": "scrolly/03_02_grassID.mp4",
+          "kind": "video",
+          "alt": "binoculars on the dash",
+          "pos": "center",
+          "overlay": "dark",
+          "pause": true,
+          "overlayVideo": "/scrolly/03_03_sophie-2.mp4",
+          "text": ""
         },
         {
           "img": "scrolly/04_01_milkjugs.mp4",
+          "kind": "video",
           "alt": "Jessie looking out window",
           "pos": "center",
-          "text": "Reese started out studying birds in a similar fashion &mdash; with her head out of a car window, more than 15 years ago. ",
-          "kind": "video"
+          "text": "Reese started out studying birds in a similar fashion &mdash; with her head out of a car window, more than 15 years ago. "
         }
       ]
     }

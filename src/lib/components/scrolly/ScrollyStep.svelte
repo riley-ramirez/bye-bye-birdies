@@ -40,7 +40,12 @@
 			class:end={step.pos === 'end'}
 		>
 			<!-- text box — the parent binds this ref for scroll trigger computation -->
-			<div class={posClass} class:overlay-text={overlay === 'dark'} bind:this={textBoxEl}>
+			<div
+				class={posClass}
+				class:overlay-text={overlay === 'dark'}
+				style={!step.text ? 'min-height:1px; visibility:hidden;' : ''}
+				bind:this={textBoxEl}
+			>
 				<!-- eslint-disable-next-line svelte/no-at-html-tags -->
 				{@html step.text}
 
@@ -102,4 +107,7 @@
     .overlay-text {
         color: white;
     }
+	.step :global(.col) {
+    min-height: 1px;
+	}
 </style>

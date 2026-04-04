@@ -13,6 +13,8 @@ export type Step = {
 	// to "Replay". Each video step manages its own play/replay state independently.
 	videoActionText?: string;
 	overlay?: 'dark';
+	pause?: boolean;
+  	overlayVideo?: string; 
 };
 
 export type MediaKind = 'image' | 'video';
@@ -59,8 +61,10 @@ export function stripHtmlToText(html: string): string {
 		.replace(/<\/p>\s*<p>/gi, '\n')
 		.replace(/<[^>]+>/g, '')
 		.replace(/&nbsp;/g, ' ')
-		.replace(/&ldquo;|&rdquo;/g, '"')
-		.replace(/&lsquo;|&rsquo;/g, "'")
+		//* .replace(/&ldquo;|&rdquo;/g, '"')
+		//* .replace(/&lsquo;|&rsquo;/g, "'")
+		.replace(/\u201C|\u201D/g, '"')   // curly double quotes → straight
+		.replace(/\u2018|\u2019/g, "'")   // curly single quotes → straight
 		.replace(/&quot;/g, '"')
 		.replace(/&amp;/g, '&')
 		.trim();
@@ -110,17 +114,14 @@ export function tryParseStepsFromBodyHtml(html: string | undefined): Step[] | nu
 		if (!Array.isArray(arr)) return null;
 
 		const coerced: Step[] = arr
-			.map((x) => ({
-				img: typeof x.img === 'string' ? x.img : '',
-				alt: typeof x.alt === 'string' ? x.alt : undefined,
-				pos: x.pos === 'start' || x.pos === 'center' || x.pos === 'end' ? x.pos : 'center',
-				text: typeof x.text === 'string' ? x.text : '',
-				kind: x.kind === 'image' || x.kind === 'video' ? x.kind : undefined,
-				videoActionText:
-					typeof x.videoActionText === 'string' ? x.videoActionText : undefined,
-				overlay: (x.overlay === 'dark' ? 'dark' : undefined) as 'dark' | undefined
-			}))
-			.filter((s) => s.img && s.text);
+		.map((x) => ({
+			...x,  // ← pass everything through as-is
+			// then override only the fields that need validation/coercion
+			img: typeof x.img === 'string' ? x.img : '',
+			pos: x.pos === 'start' || x.pos === 'center' || x.pos === 'end' ? x.pos : 'center',
+			text: typeof x.text === 'string' ? x.text : '',
+		}))
+		.filter((s) => s.img);
 
 		return coerced.length ? coerced : null;
 	} catch {
