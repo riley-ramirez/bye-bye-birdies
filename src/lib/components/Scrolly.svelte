@@ -350,7 +350,7 @@
 				{#if resolvedSteps[bgIndex]?.overlayVideo}
 					<!-- svelte-ignore a11y_media_has_caption -->
 					<video
-						transition:fade={{ duration: 600 }}
+						transition:fade={{ duration: 400 }}
 						class="overlay-video"
 						bind:this={overlayVideoEl}
 						src={resolvedSteps[bgIndex].overlayVideo}
