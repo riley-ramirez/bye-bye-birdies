@@ -27,7 +27,7 @@ List of options here: https://getbootstrap.com/docs/5.3/customize/options/
 
 
 
-$font-family-sans-serif: 'Lato', system-ui, -apple-system, 'Segoe UI', sans-serif;
+$font-family-sans-serif: 'Georgia', 'Times New Roman', serif;
 $font-size-base: 1.1rem;
 $font-weight-base: 400;
 $line-height-base: 1.6;
@@ -38,7 +38,7 @@ $headings-font-weight: 500;
 $headings-line-height: 1.2;
 $headings-color: #181818;
 
-$display-font-family: 'Times New Roman', serif;
+$display-font-family: 'Georgia', 'Times New Roman', serif;
 $display-font-style:  null;
 $display-font-weight: 300;
 $display-line-height: $headings-line-height;

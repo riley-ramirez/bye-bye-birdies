@@ -5,15 +5,28 @@
   },
   {
     "type": "shortcode",
-    "name": "Animations",
+    "name": "AnimationsCleaner",
     "attrs": {
-      "bodyHtml": "</p>\n<p>{</p>\n<p>&nbsp; &nbsp;&quot;img&quot;: &quot;animation/animation_01.mp4&quot;,</p>\n<p>&nbsp; &nbsp;&quot;kind&quot;: &quot;video&quot;</p>\n<p>}</p>\n<p>",
-      "bodyText": "{\n   \"img\": \"animation/animation_01.mp4\",\n   \"kind\": \"video\"\n}"
+      "bodyHtml": "</p>\n<p>{</p>\n<p>&nbsp; &nbsp;&quot;img&quot;: &quot;animation/animation_chestnut2.mp4&quot;,</p>\n<p>&nbsp; &nbsp;&quot;kind&quot;: &quot;video&quot;</p>\n<p>}</p>\n<p>",
+      "bodyText": "{\n   \"img\": \"animation/animation_chestnut2.mp4\",\n   \"kind\": \"video\"\n}"
     }
   },
   {
     "type": "html",
-    "html": "<h2>As grassland birds vanish, scientists look to radio technology to save them</h2>\n<p>By Riley Ramirez</p>"
+    "html": ""
+  },
+  {
+    "type": "shortcode",
+    "name": "Background",
+    "attrs": {
+      "img": "images/grid-extended.png",
+      "bodyHtml": " </p>\n<p>Since 1970, the species has lost more than half of its population, having declined over 67 percent. </p>\n<p>[[GifEmbed</p>\n<p>&nbsp; &nbsp; &nbsp;src=&quot;animation/chart_gif.gif&quot;, </p>\n<p>&nbsp; &nbsp; &nbsp;alt=&quot;Description of the gif&quot;,</p>\n<p>&nbsp; &nbsp; &nbsp;size=&quot;small&quot;</p>\n<p>]]</p>\n<p>A Berkeley Journalism School analysis of the North American Breeding Bird Survey and Partners in Flight data shows that the chestnut-collared longspur population has lost around 9 million birds in the last 50 years, and could lose another 2 million more in the next 50 years.</p>\n<p>And it&rsquo;s not alone. Among the chestnut-collared longspur, several other grassland birds are also facing significant declines in their populations.</p>\n<p>[[CollageEmbed </p>\n<p>images=&quot;images/chestnut-illustration.png, images/bairds_illustration.png, images/grasshopper_illustration.png, images/plover_illustration.png&quot; </p>\n<p>layout=&quot;masonry&quot; columns=&quot;3&quot; </p>\n<p>]]</p>\n<p>",
+      "bodyText": "Since 1970, the species has lost more than half of its population, having declined over 67 percent. \n[[GifEmbed\n     src=\"animation/chart_gif.gif\", \n     alt=\"Description of the gif\",\n     size=\"small\"\n]]\nA Berkeley Journalism School analysis of the North American Breeding Bird Survey and Partners in Flight data shows that the chestnut-collared longspur population has lost around 9 million birds in the last 50 years, and could lose another 2 million more in the next 50 years.\nAnd it's not alone. Among the chestnut-collared longspur, several other grassland birds are also facing significant declines in their populations.\n[[CollageEmbed \nimages=\"images/chestnut-illustration.png, images/bairds_illustration.png, images/grasshopper_illustration.png, images/plover_illustration.png\" \nlayout=\"masonry\" columns=\"3\" \n]]"
+    }
+  },
+  {
+    "type": "html",
+    "html": "<h2><strong><em>TK Headline</em></strong></h2>\n<p>By Riley Ramirez</p>"
   },
   {
     "type": "shortcode",
