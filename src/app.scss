@@ -69,20 +69,10 @@ Any project-wide styles should go AFTER the Bootsrap import
     background-repeat: repeat;     
 } */
 
-html {
+html, body {
   height: 100%;
   -webkit-font-smoothing: auto;
   -moz-osx-font-smoothing: auto;
-}
-
-body {
-  min-height: 100vh;
-  background-image: 
-    linear-gradient(rgba(255, 255, 255, 0.2), rgba(255, 255, 255, 0.2)),
-    url('/images/grid-extended.png');
-  background-size: cover;
-  background-position: center;
-  background-repeat: repeat;
 }
 
 /* Break out of the centered container to full viewport width */
@@ -110,8 +100,8 @@ body {
   font-family: 'Legitima', serif;
   position: absolute;
   color: white;
-  top: 70px;
-  left: 70px;
+  top: 80px;
+  left: 80px;
   z-index: 2;
   max-width: 550px;
 }
