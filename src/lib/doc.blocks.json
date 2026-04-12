@@ -7,8 +7,8 @@
     "type": "shortcode",
     "name": "AnimationsCleaner",
     "attrs": {
-      "bodyHtml": "</p>\n<p>{</p>\n<p>&nbsp; &nbsp;&quot;img&quot;: &quot;animation/animation_chestnut2.mp4&quot;,</p>\n<p>&nbsp; &nbsp;&quot;kind&quot;: &quot;video&quot;</p>\n<p>}</p>\n<p>",
-      "bodyText": "{\n   \"img\": \"animation/animation_chestnut2.mp4\",\n   \"kind\": \"video\"\n}"
+      "bodyHtml": "</p>\n<p>{</p>\n<p>&nbsp; &quot;img&quot;: &quot;animation/animation_chestnut3.mp4&quot;,</p>\n<p>&nbsp; &quot;mobileSrc&quot;: &quot;&quot;,</p>\n<p>&nbsp; &quot;kind&quot;: &quot;video&quot;</p>\n<p>}</p>\n<p>",
+      "bodyText": "{\n  \"img\": \"animation/animation_chestnut3.mp4\",\n  \"mobileSrc\": \"\",\n  \"kind\": \"video\"\n}"
     }
   },
   {
@@ -19,14 +19,13 @@
     "type": "shortcode",
     "name": "Background",
     "attrs": {
-      "img": "images/grid-extended.png",
-      "bodyHtml": " </p>\n<p>Since 1970, the species has lost more than half of its population, having declined over 67 percent. </p>\n<p>[[GifEmbed</p>\n<p>&nbsp; &nbsp; &nbsp;src=&quot;animation/chart_gif.gif&quot;, </p>\n<p>&nbsp; &nbsp; &nbsp;alt=&quot;Description of the gif&quot;,</p>\n<p>&nbsp; &nbsp; &nbsp;size=&quot;small&quot;</p>\n<p>]]</p>\n<p>A Berkeley Journalism School analysis of the North American Breeding Bird Survey and Partners in Flight data shows that the chestnut-collared longspur population has lost around 9 million birds in the last 50 years, and could lose another 2 million more in the next 50 years.</p>\n<p>And it&rsquo;s not alone. Among the chestnut-collared longspur, several other grassland birds are also facing significant declines in their populations.</p>\n<p>[[CollageEmbed </p>\n<p>images=&quot;images/chestnut-illustration.png, images/bairds_illustration.png, images/grasshopper_illustration.png, images/plover_illustration.png&quot; </p>\n<p>layout=&quot;masonry&quot; columns=&quot;3&quot; </p>\n<p>]]</p>\n<p>",
-      "bodyText": "Since 1970, the species has lost more than half of its population, having declined over 67 percent. \n[[GifEmbed\n     src=\"animation/chart_gif.gif\", \n     alt=\"Description of the gif\",\n     size=\"small\"\n]]\nA Berkeley Journalism School analysis of the North American Breeding Bird Survey and Partners in Flight data shows that the chestnut-collared longspur population has lost around 9 million birds in the last 50 years, and could lose another 2 million more in the next 50 years.\nAnd it's not alone. Among the chestnut-collared longspur, several other grassland birds are also facing significant declines in their populations.\n[[CollageEmbed \nimages=\"images/chestnut-illustration.png, images/bairds_illustration.png, images/grasshopper_illustration.png, images/plover_illustration.png\" \nlayout=\"masonry\" columns=\"3\" \n]]"
+      "bodyHtml": "</p>\n<p>Since 1970, the species has lost more than half of its population, having declined over 67 percent. </p>\n<p>[[GifEmbed</p>\n<p>&nbsp; &nbsp; &nbsp;src=&quot;animation/chart_gif.gif&quot;, </p>\n<p>&nbsp; &nbsp; &nbsp;alt=&quot;Description of the gif&quot;,</p>\n<p>&nbsp; &nbsp; &nbsp;size=&quot;fit&quot;,</p>\n<p>&nbsp; &nbsp; &nbsp;caption=&quot;Source: North America Breeding Bird Survey, U.S. Geological Survey.&quot;</p>\n<p>]]</p>\n<p>A Berkeley Journalism School analysis of the North American Breeding Bird Survey and Partners in Flight data shows that the chestnut-collared longspur population has lost around 9 million birds in the last 50 years, and could lose another 2 million more in the next 50 years.</p>\n<p>Significant degradation and loss of grassland habitat has caused this species to disappear from much of its historical range. </p>\n<p>In an effort to reverse &mdash; or at least stall &mdash; the wide scale loss of the chestnut-collared longspur and several other grassland birds, scientists have turned to a tiny tracking device that provides answers to aid conservation.</p>\n<p>",
+      "bodyText": "Since 1970, the species has lost more than half of its population, having declined over 67 percent. \n[[GifEmbed\n     src=\"animation/chart_gif.gif\", \n     alt=\"Description of the gif\",\n     size=\"fit\",\n     caption=\"Source: North America Breeding Bird Survey, U.S. Geological Survey.\"\n]]\nA Berkeley Journalism School analysis of the North American Breeding Bird Survey and Partners in Flight data shows that the chestnut-collared longspur population has lost around 9 million birds in the last 50 years, and could lose another 2 million more in the next 50 years.\nSignificant degradation and loss of grassland habitat has caused this species to disappear from much of its historical range. \nIn an effort to reverse &mdash; or at least stall &mdash; the wide scale loss of the chestnut-collared longspur and several other grassland birds, scientists have turned to a tiny tracking device that provides answers to aid conservation."
     }
   },
   {
     "type": "html",
-    "html": "<h2><strong><em>TK Headline</em></strong></h2>\n<p>By Riley Ramirez</p>"
+    "html": ""
   },
   {
     "type": "shortcode",
@@ -96,19 +95,6 @@
           "text": "Reese started out studying birds in a similar fashion &mdash; with her head out of a car window, more than 15 years ago."
         }
       ]
-    }
-  },
-  {
-    "type": "html",
-    "html": ""
-  },
-  {
-    "type": "shortcode",
-    "name": "Background",
-    "attrs": {
-      "img": "images/blue_solid.png",
-      "bodyHtml": " </p>\n<p>Similar to most declining grassland birds, significant degradation and loss of breeding habitat has caused the species to disappear from much of its historical range.</p>\n<p>In January, Bird Conservancy of the Rockies research scientist Jessie Reese and her field crew traveled to New Mexico in an effort to tag and monitor these species on their non-breeding grounds.</p>\n<p>[[VideoEmbed</p>\n<p>src=&quot;animation/animation_jessie.mp4&quot;</p>\n<p>title=&quot;Title of your video for SEO, won&#39;t be visible&quot;</p>\n<p>size=&quot;large&quot;</p>\n<p>autoplay=&quot;false&quot;</p>\n<p>controls=&quot;true&quot;</p>\n<p>playsinline=&quot;true&quot;</p>\n<p>mute=&quot;false&quot;</p>\n<p>]]</p>\n<p>",
-      "bodyText": "Similar to most declining grassland birds, significant degradation and loss of breeding habitat has caused the species to disappear from much of its historical range.\nIn January, Bird Conservancy of the Rockies research scientist Jessie Reese and her field crew traveled to New Mexico in an effort to tag and monitor these species on their non-breeding grounds.\n[[VideoEmbed\nsrc=\"animation/animation_jessie.mp4\"\ntitle=\"Title of your video for SEO, won&#39;t be visible\"\nsize=\"large\"\nautoplay=\"false\"\ncontrols=\"true\"\nplaysinline=\"true\"\nmute=\"false\"\n]]"
     }
   },
   {

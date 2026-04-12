@@ -5,11 +5,14 @@
   export let src: string = '';
   export let bodyText: string = '';
   export let scrubStart: number = 4;
+  export let mobileSrc: string = '';
+  export let mobileBreakpoint: number = 768;
 
   $: if (!src && bodyText) {
     try {
       const parsed = JSON.parse(bodyText);
       src = base + '/' + (parsed.img ?? '');
+      mobileSrc = parsed.mobileSrc ? base + '/' + parsed.mobileSrc : '';
     } catch (e) {
       console.error('Animations: could not parse bodyText', e);
     }
@@ -22,18 +25,23 @@
   let duration = 0;
   let scrollHeight = 5000;
   let isScrubbing = false;
+  let showScrollIndicator = false;
 
   function scrub() {
     if (!video || !duration || !isScrubbing) return;
     const { top, height } = container.getBoundingClientRect();
     const progress = Math.min(Math.max(-top / (height - window.innerHeight), 0), 1);
     video.currentTime = scrubStart + progress * (duration - scrubStart);
+
+    // Hide indicator once user starts scrolling
+    if (progress > 0.02) showScrollIndicator = false;
   }
 
   function handleTimeUpdate() {
     if (!isScrubbing && video.currentTime >= scrubStart) {
       video.pause();
       isScrubbing = true;
+      showScrollIndicator = true;
       scrub();
     }
   }
@@ -44,6 +52,9 @@
   function setupVideo() {
     if (!video || !src || initialized) return;
     initialized = true;
+
+    const activeSrc = (mobileSrc && window.innerWidth < mobileBreakpoint) ? mobileSrc : src;
+    video.querySelector('source')?.setAttribute('src', activeSrc);
 
     video.addEventListener(
       'loadedmetadata',
@@ -91,6 +102,18 @@
     <video bind:this={video} preload="auto" muted playsinline disablepictureinpicture>
       <source {src} type="video/mp4" />
     </video>
+
+    <div class="scroll-indicator" class:visible={showScrollIndicator} aria-hidden="true">
+      <span class="scroll-label">Scroll to continue</span>
+      <div class="chevrons">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <polyline points="6 9 12 15 18 9" />
+        </svg>
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <polyline points="6 9 12 15 18 9" />
+        </svg>
+      </div>
+    </div>
   </div>
 </div>
 
@@ -115,5 +138,62 @@
     height: 100%;
     object-fit: cover;
     pointer-events: none;
+  }
+
+  .scroll-indicator {
+    position: absolute;
+    bottom: 2rem;
+    left: 50%;
+    transform: translateX(-50%);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.25rem;
+    color: white;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.6s ease;
+    /* Subtle drop shadow so it reads on any video frame */
+    filter: drop-shadow(0 1px 4px rgba(0, 0, 0, 0.5));
+  }
+
+  .scroll-indicator.visible {
+    opacity: 1;
+  }
+
+  .scroll-label {
+    font-size: 0.75rem;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    font-weight: 600;
+    font-family: Azeret Mono, monospace;
+  }
+
+  .chevrons {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+  }
+
+  .chevrons svg {
+    width: 1.5rem;
+    height: 1.5rem;
+    /* Staggered bounce animation on the two chevrons */
+    animation: bounce 1.4s ease-in-out infinite;
+  }
+
+  .chevrons svg:first-child {
+    opacity: 0.5;
+    animation-delay: 0s;
+    margin-bottom: -0.5rem;
+  }
+
+  .chevrons svg:last-child {
+    animation-delay: 0.2s;
+  }
+
+  @keyframes bounce {
+    0%, 100% { transform: translateY(0); }
+    50%       { transform: translateY(5px); }
   }
 </style>

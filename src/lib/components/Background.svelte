@@ -59,7 +59,7 @@
   <div class="bg-clip">
     <img class="bg" src="{base}/{img}" alt="" aria-hidden="true" />
   </div>
-  <div class="content container">
+  <div class="background-content container">
     <div class="row justify-content-center">
       <div class="col-12 col-sm-10 col-lg-6 col-xxl-7">
         {#each chunks as chunk, i (i)}
@@ -137,18 +137,20 @@
     width: 100vw;
     left: 50%;
     transform: translateX(-50%);
-    /* Must be at least as tall as the image */
-    min-height: 112.5vw;
-    margin-bottom: 5rem;
+    margin-bottom: 4rem;
   }
 
-  .content {
+  .background-content {
     position: relative;
     z-index: 1;
-    padding: 6rem 4.5rem;
+    padding: 3rem 4.5rem;
     color: black;
     font-family: Azeret Mono, monospace;
     font-size: large;
+  }
+
+  .background-content :global(p) {
+    margin-bottom: 1.5rem;
   }
 
   .embed-wrap {
@@ -164,6 +166,7 @@
     width: 100%;
     height: auto;
     display: block;
+    padding: 1rem 0;
   }
 
   .gif-embed.full {
@@ -174,14 +177,15 @@
   }
 
   .gif-embed.fit img {
-    width: 106%;
-    margin-left: -5.5%;
+    width: 110%;
+    margin-left: -6.5%;
     height: auto;
   }
 
   .gif-embed figcaption {
     font-size: 0.85rem;
     opacity: 0.7;
-    margin-top: 0.5rem;
+    margin-top: -0.5rem;
+    max-width: 95%;
   }
 </style>
