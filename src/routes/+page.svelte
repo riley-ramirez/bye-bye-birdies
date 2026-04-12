@@ -2,7 +2,6 @@
   import rawBlocks from '$lib/doc.blocks.json';
   import DocRenderer from '$lib/components/DocRenderer.svelte';
   import type { Block } from '$lib/components/DocRenderer.svelte';
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   import { base } from '$app/paths';
 
   const blocks = rawBlocks as Block[];
@@ -23,7 +22,7 @@ This code is in +page.svelte and can be manually coded using HTML or Svelte tags
 <DocRenderer blocks={preHeroBlocks} />
 
 
-<header class="container-fluid vh-100 position-relative overflow-hidden" style="margin-bottom: 3rem;">
+<header class="container-fluid vh-100 position-relative overflow-hidden">
 
   <!-- Video 
    <video autoplay muted loop playsinline class="bg-video">
@@ -43,13 +42,27 @@ This code is in +page.svelte and can be manually coded using HTML or Svelte tags
       the North American landscape since 1970, conservationists are still racing 
       to reverse catastrophic losses that show no sign of slowing down.
     </p>
-
-    <p class="fw-light">
-      By Riley Ramirez
-    </p>
   </div> 
 
 </header>
+
+<!-- Byline -->
+<div class="byline container">
+  <div class="row justify-content-center">
+    <div class="col-12 col-sm-10 col-lg-8 col-xxl-6">
+      <div class="d-flex align-items-center gap-3">
+        <img src="{base}/images/headshot-gray.png" alt="Riley Ramirez" style="width: 55px; height: 55px; border-radius: 50%; object-fit: cover;">
+        <p class="mb-0" style="line-height: 1.2;">
+          <strong>By Riley Ramirez</strong><br> 
+          <span style="font-size: 1.1rem; opacity: 0.6;">UC Berkeley Graduate School of Journalism</span>
+        </p>
+      </div>
+        <p class="fw-light mt-2 mb-0" style="font-size: 0.9rem; color: grey; padding-top: 0.1rem;">
+          May 5, 2026
+        </p>
+    </div>
+  </div>
+</div>
 
 
 <!-- DO NOT EDIT (except to modify classes). This will become code imported from Google Doc. -->

@@ -158,7 +158,7 @@
   }
 
   .gif-embed {
-    margin: 2rem 0 2rem;
+    margin: 1.5rem 0 3rem;
     width: 100%;
   }
 
@@ -186,6 +186,7 @@
     font-size: 0.85rem;
     opacity: 0.7;
     margin-top: -0.5rem;
+    margin-bottom: 3rem;
     max-width: 95%;
   }
 </style>

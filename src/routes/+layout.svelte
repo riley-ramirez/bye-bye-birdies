@@ -20,13 +20,14 @@
 	<link rel="icon" href={favicon} />
 </svelte:head>
 
-<div style="background-image: linear-gradient(rgba(255,255,255,0.4), rgba(255,255,255,0.4)), url('{base}/images/grid-extended.png')" id="app-background">
+<div id="app-background" style="--bg-image: url('{base}/images/grid-extended.png')">
 	{@render children()}
 </div>
 
 <style>
 	#app-background {
 		min-height: 100vh;
+		background-image: linear-gradient(rgba(255,255,255,0.3), rgba(255,255,255,0.3)), var(--bg-image);
 		background-size: contain;
 		background-position: center;
 		background-repeat: repeat;

@@ -384,6 +384,7 @@
 	.scrolly {
 		position: relative;
 		margin-top: 3rem;
+		margin-bottom: 3rem;
 	}
 
 	.scrolly-bg {

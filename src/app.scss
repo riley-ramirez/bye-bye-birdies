@@ -27,8 +27,8 @@ List of options here: https://getbootstrap.com/docs/5.3/customize/options/
 
 
 
-$font-family-sans-serif: 'Georgia', 'Times New Roman', serif;
-$font-size-base: 1.1rem;
+$font-family-sans-serif: 'Georgia','Helvetica', Arial, sans-serif;
+$font-size-base: 1.2rem;
 $font-weight-base: 400;
 $line-height-base: 1.6;
 
@@ -55,19 +55,6 @@ Any project-wide styles should go AFTER the Bootsrap import
 ************/
 
 
-
-/* html, body {
-    height: 100%;
-    -webkit-font-smoothing: auto;
-    -moz-osx-font-smoothing: auto;
-
-    background-image: url('images/grid-extended.png');
-    background-size: cover;       // Scales image to cover the entire viewport
-    background-position: center;  // Centers the image
-    background-color: rgba(255, 255, 255, 0.4); // white overlay — adjust opacity to taste
-    background-blend-mode: lighten;
-    background-repeat: repeat;     
-} */
 
 html, body {
   height: 100%;
@@ -100,8 +87,8 @@ html, body {
   font-family: 'Legitima', serif;
   position: absolute;
   color: white;
-  top: 80px;
-  left: 80px;
+  top: 70px;
+  left: 70px;
   z-index: 2;
   max-width: 550px;
 }
@@ -131,6 +118,14 @@ html, body {
   letter-spacing: 2px;
   display: block;
   margin-left: 3rem;
+}
+
+.byline {
+  font-family: Arial, Helvetica, sans-serif;
+  font-size: 1.1rem;
+  font-weight: 400;
+  margin-top: 3rem;
+  padding-bottom: 3rem;
 }
 
 .scrolly-bg {
