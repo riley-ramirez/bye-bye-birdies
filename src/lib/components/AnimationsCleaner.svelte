@@ -75,7 +75,7 @@
           observer.disconnect();
         }
       },
-      { threshold: 1 }
+      { threshold: 0 }
     );
     observer.observe(sticky);
 
@@ -119,9 +119,12 @@
 
 <style>
   .scrolly {
-    width: 100vw;
-    margin-left: calc(50% - 50vw);
+    width: 100%;
     position: relative;
+    left: 50%;
+    right: 50%;
+    margin-left: -50%;
+    margin-right: -50%;
   }
   .sticky {
     position: sticky;

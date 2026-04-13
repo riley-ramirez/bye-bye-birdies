@@ -7,8 +7,8 @@
     "type": "shortcode",
     "name": "AnimationsCleaner",
     "attrs": {
-      "bodyHtml": "</p>\n<p>{</p>\n<p>&nbsp; &quot;img&quot;: &quot;animation/animation_chestnut3.mp4&quot;,</p>\n<p>&nbsp; &quot;mobileSrc&quot;: &quot;&quot;,</p>\n<p>&nbsp; &quot;kind&quot;: &quot;video&quot;</p>\n<p>}</p>\n<p>",
-      "bodyText": "{\n  \"img\": \"animation/animation_chestnut3.mp4\",\n  \"mobileSrc\": \"\",\n  \"kind\": \"video\"\n}"
+      "bodyHtml": "</p>\n<p>{</p>\n<p>&nbsp; &quot;img&quot;: &quot;animation/animation_chestnut3.mp4&quot;,</p>\n<p>&nbsp; &quot;kind&quot;: &quot;video&quot;</p>\n<p>}</p>\n<p>",
+      "bodyText": "{\n  \"img\": \"animation/animation_chestnut3.mp4\",\n  \"kind\": \"video\"\n}"
     }
   },
   {
@@ -32,7 +32,7 @@
     "name": "VideoEmbed",
     "attrs": {
       "p": true,
-      "src": "scrolly/01_01_sunrise_short.mp4",
+      "src": "scrolly/03_01_birding_compressed.mp4",
       "title": "Title of your video for SEO, won't be visible",
       "size": "fit",
       "caption": "Sunrise over the San Andres Mountains, Hatch, New Mexico.",

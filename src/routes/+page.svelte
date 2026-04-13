@@ -22,13 +22,15 @@ This code is in +page.svelte and can be manually coded using HTML or Svelte tags
 <DocRenderer blocks={preHeroBlocks} />
 
 
-<header class="container-fluid vh-100 position-relative overflow-hidden">
+<header class="container-fluid vh-100 position-relative overflow-hidden" style="background-image:url('{base}/hero/hero-bird-collage.png');background-size:cover;background-position:center;">
 
   <!-- Video 
    <video autoplay muted loop playsinline class="bg-video">
     <source src="{base}/videos/0_hero_stabilized.mp4" type="video/mp4">
   </video> 
   -->
+
+
 
   <!-- Text content -->
   <div class="hero-content text-white">

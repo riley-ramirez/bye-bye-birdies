@@ -27,6 +27,7 @@
 <style>
 	#app-background {
 		min-height: 100vh;
+		min-width: 100vw;
 		background-image: linear-gradient(rgba(255,255,255,0.3), rgba(255,255,255,0.3)), var(--bg-image);
 		background-size: contain;
 		background-position: center;
