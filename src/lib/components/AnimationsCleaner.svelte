@@ -26,6 +26,7 @@
   let scrollHeight = 5000;
   let isScrubbing = false;
   let showScrollIndicator = false;
+  let indicatorTimer: ReturnType<typeof setTimeout>;  // ADD
 
   function scrub() {
     if (!video || !duration || !isScrubbing) return;
@@ -33,7 +34,6 @@
     const progress = Math.min(Math.max(-top / (height - window.innerHeight), 0), 1);
     video.currentTime = scrubStart + progress * (duration - scrubStart);
 
-    // Hide indicator once user starts scrolling
     if (progress > 0.02) showScrollIndicator = false;
   }
 
@@ -42,6 +42,7 @@
       video.pause();
       isScrubbing = true;
       showScrollIndicator = true;
+      clearTimeout(indicatorTimer);  // ADD — cancel fallback if video worked
       scrub();
     }
   }
@@ -68,6 +69,14 @@
     video.addEventListener('timeupdate', handleTimeUpdate);
     video.load();
 
+    // ADD — fallback: show indicator after 5s if video never triggers handleTimeUpdate
+    indicatorTimer = setTimeout(() => {
+      if (!showScrollIndicator) {
+        isScrubbing = true;
+        showScrollIndicator = true;
+      }
+    }, 5000);
+
     const observer = new IntersectionObserver(
       (entries) => {
         if (entries[0].isIntersecting && !isScrubbing) {
@@ -83,6 +92,7 @@
     window.addEventListener('resize', scrub, { passive: true });
 
     cleanup = () => {
+      clearTimeout(indicatorTimer);  // ADD
       window.removeEventListener('scroll', scrub);
       window.removeEventListener('resize', scrub);
       video.removeEventListener('timeupdate', handleTimeUpdate);
