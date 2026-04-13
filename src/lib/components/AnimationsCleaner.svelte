@@ -4,7 +4,7 @@
 
   export let src: string = '';
   export let bodyText: string = '';
-  export let scrubStart: number = 4;
+  export let scrubStart: number = 3.9;
   export let mobileSrc: string = '';
   export let mobileBreakpoint: number = 768;
 
