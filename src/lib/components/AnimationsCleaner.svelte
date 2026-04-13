@@ -4,7 +4,7 @@
 
   export let src: string = '';
   export let bodyText: string = '';
-  export let scrubStart: number = 3.9;
+  export let scrubStart: number = 4;
   export let mobileSrc: string = '';
   export let mobileBreakpoint: number = 768;
 
@@ -29,6 +29,8 @@
   let indicatorTimer: ReturnType<typeof setTimeout>;  // ADD
 
   function scrub() {
+    if (!video || !duration || !isScrubbing) return;
+    if (video.readyState < 2) return; // wait until enough data is loaded
     if (!video || !duration || !isScrubbing) return;
     const { top, height } = container.getBoundingClientRect();
     const progress = Math.min(Math.max(-top / (height - window.innerHeight), 0), 1);
