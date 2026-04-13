@@ -84,7 +84,7 @@
           observer.disconnect();
         }
       },
-      { threshold: 0 }
+      { threshold: 0.5 }
     );
     observer.observe(sticky);
 
