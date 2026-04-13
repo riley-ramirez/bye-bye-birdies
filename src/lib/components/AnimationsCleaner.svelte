@@ -26,26 +26,47 @@
   let scrollHeight = 5000;
   let isScrubbing = false;
   let showScrollIndicator = false;
-  let indicatorTimer: ReturnType<typeof setTimeout>;  // ADD
+  let indicatorTimer: ReturnType<typeof setTimeout>;
 
   function scrub() {
     if (!video || !duration || !isScrubbing) return;
-    if (video.readyState < 2) return; // wait until enough data is loaded
-    if (!video || !duration || !isScrubbing) return;
+    if (video.readyState < 2) return;
+
     const { top, height } = container.getBoundingClientRect();
     const progress = Math.min(Math.max(-top / (height - window.innerHeight), 0), 1);
-    video.currentTime = scrubStart + progress * (duration - scrubStart);
+    const targetTime = scrubStart + progress * (duration - scrubStart);
+
+    // Only seek if the target time is actually buffered
+    const buffered = video.buffered;
+    for (let i = 0; i < buffered.length; i++) {
+      if (targetTime >= buffered.start(i) && targetTime <= buffered.end(i)) {
+        video.currentTime = targetTime;
+        break;
+      }
+    }
 
     if (progress > 0.02) showScrollIndicator = false;
   }
 
+  function startScrubbing() {
+    video.pause();
+    isScrubbing = true;
+    showScrollIndicator = true;
+    clearTimeout(indicatorTimer);
+    scrub();
+  }
+
+  function checkScrubStart() {
+    if (video.currentTime >= scrubStart) {
+      startScrubbing();
+    } else {
+      video.requestVideoFrameCallback(checkScrubStart);
+    }
+  }
+
   function handleTimeUpdate() {
     if (!isScrubbing && video.currentTime >= scrubStart) {
-      video.pause();
-      isScrubbing = true;
-      showScrollIndicator = true;
-      clearTimeout(indicatorTimer);  // ADD — cancel fallback if video worked
-      scrub();
+      startScrubbing();
     }
   }
 
@@ -68,10 +89,25 @@
       { once: true }
     );
 
-    video.addEventListener('timeupdate', handleTimeUpdate);
+    video.addEventListener(
+      'canplaythrough',
+      () => {
+        if (isScrubbing) scrub(); // re-run scrub now that video is fully buffered
+      },
+      { once: true }
+    );
+
+    // Use requestVideoFrameCallback if available for frame-accurate pause,
+    // fall back to timeupdate otherwise
+    if ('requestVideoFrameCallback' in HTMLVideoElement.prototype) {
+      video.requestVideoFrameCallback(checkScrubStart);
+    } else {
+      video.addEventListener('timeupdate', handleTimeUpdate);
+    }
+
     video.load();
 
-    // ADD — fallback: show indicator after 5s if video never triggers handleTimeUpdate
+    // Fallback: show indicator after 5s if video never triggers
     indicatorTimer = setTimeout(() => {
       if (!showScrollIndicator) {
         isScrubbing = true;
@@ -94,7 +130,7 @@
     window.addEventListener('resize', scrub, { passive: true });
 
     cleanup = () => {
-      clearTimeout(indicatorTimer);  // ADD
+      clearTimeout(indicatorTimer);
       window.removeEventListener('scroll', scrub);
       window.removeEventListener('resize', scrub);
       video.removeEventListener('timeupdate', handleTimeUpdate);
@@ -168,7 +204,6 @@
     opacity: 0;
     pointer-events: none;
     transition: opacity 0.6s ease;
-    /* Subtle drop shadow so it reads on any video frame */
     filter: drop-shadow(0 1px 4px rgba(0, 0, 0, 0.5));
   }
 
@@ -193,7 +228,6 @@
   .chevrons svg {
     width: 1.5rem;
     height: 1.5rem;
-    /* Staggered bounce animation on the two chevrons */
     animation: bounce 1.4s ease-in-out infinite;
   }
 
