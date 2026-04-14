@@ -45,7 +45,7 @@
       }
     }
 
-    if (progress > 0.02) showScrollIndicator = false;
+    if (progress > 0.05) showScrollIndicator = false;
   }
 
   function startScrubbing() {
