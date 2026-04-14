@@ -8,11 +8,14 @@
   let embeddedSrc: string | null = null;
   let embeddedAlt: string | null = null;
 
+  import { base } from '$app/paths';
+
   function normalizeStaticPath(raw: string) {
     const s = raw.trim();
     if (/^data:/i.test(s) || /^https?:\/\//i.test(s)) return s;
-    if (s.startsWith('/')) return s;
-    return '/' + s;
+
+    if (s.startsWith('/')) return base + s;
+    return base + '/' + s;
   }
 
   import { onMount } from 'svelte';
@@ -51,7 +54,12 @@
     }
   });
 
-  $: finalSrc = src ? normalizeStaticPath(src) : embeddedSrc;
+  $: finalSrc = src
+  ? normalizeStaticPath(src)
+  : embeddedSrc
+    ? normalizeStaticPath(embeddedSrc)
+    : null;
+    
   $: finalAlt = (alt && alt.trim().length ? alt : embeddedAlt) ?? '';
   $: shouldRender = !!(finalSrc && finalSrc.trim().length);
   $: isInline = size === 'inline-left' || size === 'inline-right';
