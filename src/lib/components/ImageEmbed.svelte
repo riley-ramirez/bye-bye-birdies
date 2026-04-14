@@ -94,7 +94,7 @@
 
   {:else if isInline}
     <figure class="img-inline img-inline--{size === 'inline-left' ? 'left' : 'right'}">
-      <img src={finalSrc} alt={finalAlt} class="img-fluid border" />
+      <img src={finalSrc} alt={finalAlt} class="img-fluid" />
       {#if caption}
         <figcaption class="mt-2 text-muted small">{caption}</figcaption>
       {/if}
@@ -113,8 +113,8 @@
 
 <style>
   .img-inline {
-    width: 40%;
-    max-width: 40%;
+    width: 45%;
+    max-width: 45%;
     margin-top: 0.25em;
   }
 
