@@ -3,7 +3,7 @@
   export let src: string | undefined;
   export let alt: string | undefined;
   export let caption: string | undefined;
-  export let size: 'full' | 'large' | 'fit' | 'inline-left' | 'inline-right' = 'large';
+  export let size: 'full' | 'large' | 'fit' | 'inline-left' | 'inline-right' | 'margin-left' | 'margin-right' = 'large';
 
   let embeddedSrc: string | null = null;
   let embeddedAlt: string | null = null;
@@ -63,6 +63,7 @@
   $: finalAlt = (alt && alt.trim().length ? alt : embeddedAlt) ?? '';
   $: shouldRender = !!(finalSrc && finalSrc.trim().length);
   $: isInline = size === 'inline-left' || size === 'inline-right';
+  $: isMargin = size === 'margin-left' || size === 'margin-right';
 </script>
 
 <!-- anchor node so we can locate the DOM position -->
@@ -94,6 +95,14 @@
 
   {:else if isInline}
     <figure class="img-inline img-inline--{size === 'inline-left' ? 'left' : 'right'}">
+      <img src={finalSrc} alt={finalAlt} class="img-fluid" />
+      {#if caption}
+        <figcaption class="mt-2 text-muted small">{caption}</figcaption>
+      {/if}
+    </figure>
+
+  {:else if isMargin}
+    <figure class="img-margin img-margin--{size === 'margin-left' ? 'left' : 'right'}">
       <img src={finalSrc} alt={finalAlt} class="img-fluid" />
       {#if caption}
         <figcaption class="mt-2 text-muted small">{caption}</figcaption>
@@ -140,4 +149,38 @@
   .img-inline + :global(p)  {
     overflow: visible; /* let the paragraph flow around the float naturally */
   }
+
+  .img-margin {
+    width: 60%;
+    position: relative;
+    z-index: 0;
+  }
+
+  .img-margin--left {
+    float: left;
+    margin-left: -300px; /* pushes into left margin */
+    margin-right: 1rem;
+  }
+
+  .img-margin--right {
+    float: right;
+    margin-right: -400px; /* pushes into right margin */
+    margin-left: 0rem;
+  }
+
+  .img-margin img {
+    width: 100%;
+    height: auto;
+    display: block;
+  }
+
+  @media (max-width: 992px) {
+    .img-margin {
+      float: none;
+      margin: 1rem auto;
+      width: 100%;
+      max-width: 500px;
+    }
+  }
+
 </style>
