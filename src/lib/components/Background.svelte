@@ -24,24 +24,71 @@
       .replace(/&gt;/g, '>');
 
     const chunks: Chunk[] = [];
-    const re = /\[\[(VideoEmbed|GifEmbed|CollageEmbed)([\s\S]*?)\]\]/g;
+    const re = /\[\[(VideoEmbed|GifEmbed|CollageEmbed|ImageEmbed)([\s\S]*?)\]\]/g;
     let cursor = 0;
     let match;
 
     while ((match = re.exec(flat)) !== null) {
-      if (match.index > cursor) {
-        const text = flat.slice(cursor, match.index).trim();
-        if (text) chunks.push({ type: 'html', html: `<p>${text.replace(/\n+/g, '</p><p>')}</p>` });
-      }
-
       const attrs: Record<string, string> = {};
       const attrRe = /([A-Za-z_][\w-]*)="([^"]*)"/g;
       let a;
       while ((a = attrRe.exec(match[2])) !== null) {
         attrs[a[1]] = a[2];
       }
-      chunks.push({ type: match[1] as 'VideoEmbed' | 'GifEmbed', attrs });
-      cursor = match.index + match[0].length;
+
+      const isInlineImage =
+        match[1] === 'ImageEmbed' &&
+        (attrs.size === 'inline-left' || attrs.size === 'inline-right');
+
+      if (isInlineImage) {
+        // Grab text on the same line before the shortcode
+        const before = flat.slice(cursor, match.index).trimEnd();
+        const lastBreak = before.lastIndexOf('\n');
+        const leadingText = lastBreak === -1 ? before : before.slice(lastBreak + 1);
+        const precedingText = lastBreak === -1 ? '' : before.slice(0, lastBreak).trim();
+
+        // Flush paragraphs before the inline line
+        if (precedingText) {
+          chunks.push({ type: 'html', html: `<p>${precedingText.replace(/\n+/g, '</p><p>')}</p>` });
+        }
+
+        // Grab text after the shortcode up to the next paragraph break
+        const after = flat.slice(match.index + match[0].length);
+        const nextBreak = after.search(/\n\n|\[\[/);
+        const trailingText = (nextBreak === -1 ? after : after.slice(0, nextBreak)).trim();
+
+        const floatDir = attrs.size === 'inline-left' ? 'left' : 'right';
+        const imgTag = `<img src="${attrs.src}" alt="${attrs.alt ?? ''}" class="img-inline-float img-inline-float--${floatDir}" />`;
+
+        const combined = [leadingText, imgTag, trailingText].filter(Boolean).join('');
+        chunks.push({ type: 'html', html: `<p>${combined}</p>` });
+
+        cursor = match.index + match[0].length + (nextBreak === -1 ? after.length : nextBreak);
+
+      } else if (match[1] === 'ImageEmbed') {
+        // Non-inline ImageEmbed: flush preceding text, then render as constrained figure
+        if (match.index > cursor) {
+          const text = flat.slice(cursor, match.index).trim();
+          if (text) chunks.push({ type: 'html', html: `<p>${text.replace(/\n+/g, '</p><p>')}</p>` });
+        }
+        const caption = attrs.caption
+          ? `<figcaption class="img-block-caption">${attrs.caption}</figcaption>`
+          : '';
+        chunks.push({
+          type: 'html',
+          html: `<figure class="img-block"><img src="${attrs.src}" alt="${attrs.alt ?? ''}" />${caption}</figure>`
+        });
+        cursor = match.index + match[0].length;
+
+      } else {
+        // VideoEmbed, GifEmbed, CollageEmbed
+        if (match.index > cursor) {
+          const text = flat.slice(cursor, match.index).trim();
+          if (text) chunks.push({ type: 'html', html: `<p>${text.replace(/\n+/g, '</p><p>')}</p>` });
+        }
+        chunks.push({ type: match[1] as 'VideoEmbed' | 'GifEmbed' | 'CollageEmbed', attrs });
+        cursor = match.index + match[0].length;
+      }
     }
 
     if (cursor < flat.length) {
@@ -115,11 +162,9 @@
     top: 0;
     left: 0;
     width: 100%;
-    /* 1920x2160 = 2:1 height ratio, so at full viewport width: */
-    height: 112.5vw; 
+    height: 112.5vw;
     overflow: hidden;
     z-index: 0;
-    /* Critical: don't let this affect layout */
     pointer-events: none;
   }
 
@@ -143,7 +188,7 @@
   .background-content {
     position: relative;
     z-index: 1;
-    padding: 3rem 4.5rem;
+    padding: 3rem 4.5rem 0rem;
     color: black;
     font-family: Azeret Mono, monospace;
     font-size: large;
@@ -151,6 +196,49 @@
 
   .background-content :global(p) {
     margin-bottom: 1.5rem;
+  }
+
+  /* Non-inline ImageEmbed: constrained to column, never bleeds out */
+  .background-content :global(.img-block) {
+    margin: 1.5rem 0 2rem;
+    width: 100%;
+  }
+
+  .background-content :global(.img-block img) {
+    width: 100%;
+    height: auto;
+    display: block;
+  }
+
+  .background-content :global(.img-block-caption) {
+    font-size: 0.85rem;
+    opacity: 0.7;
+    margin-top: 0.5rem;
+  }
+
+  /* Inline float ImageEmbed */
+  .background-content :global(.img-inline-float) {
+    width: 33%;
+    height: auto;
+    display: block;
+    margin-top: 0.5rem;
+  }
+
+  .background-content :global(.img-inline-float--left) {
+    float: left;
+    margin-right: 1.25rem;
+    margin-bottom: 0.5rem;
+  }
+
+  .background-content :global(.img-inline-float--right) {
+    float: right;
+    margin-left: 1.25rem;
+    margin-bottom: 0.5rem;
+  }
+
+  /* Clearfix so floats don't bleed into following blocks */
+  :global(.background-content p:has(.img-inline-float)) {
+    overflow: hidden;
   }
 
   .embed-wrap {

@@ -3,7 +3,7 @@
   export let src: string | undefined;
   export let alt: string | undefined;
   export let caption: string | undefined;
-  export let size: 'full' | 'large' | 'fit' = 'large';
+  export let size: 'full' | 'large' | 'fit' | 'inline-left' | 'inline-right' = 'large';
 
   let embeddedSrc: string | null = null;
   let embeddedAlt: string | null = null;
@@ -54,6 +54,7 @@
   $: finalSrc = src ? normalizeStaticPath(src) : embeddedSrc;
   $: finalAlt = (alt && alt.trim().length ? alt : embeddedAlt) ?? '';
   $: shouldRender = !!(finalSrc && finalSrc.trim().length);
+  $: isInline = size === 'inline-left' || size === 'inline-right';
 </script>
 
 <!-- anchor node so we can locate the DOM position -->
@@ -83,6 +84,14 @@
       </div>
     </figure>
 
+  {:else if isInline}
+    <figure class="img-inline img-inline--{size === 'inline-left' ? 'left' : 'right'}">
+      <img src={finalSrc} alt={finalAlt} class="img-fluid border" />
+      {#if caption}
+        <figcaption class="mt-2 text-muted small">{caption}</figcaption>
+      {/if}
+    </figure>
+
   {:else}
     <!-- fit -->
     <figure class="my-3">
@@ -93,3 +102,34 @@
     </figure>
   {/if}
 {/if}
+
+<style>
+  .img-inline {
+    width: 40%;
+    max-width: 40%;
+    margin-top: 0.25em;
+  }
+
+  .img-inline--left {
+    float: left;
+    margin-right: 1.25rem;
+    margin-bottom: 0.75rem;
+  }
+
+  .img-inline--right {
+    float: right;
+    margin-left: 1.25rem;
+    margin-bottom: 0rem;
+  }
+
+  .img-inline img {
+    width: 100%;
+    height: auto;
+    display: block;
+  }
+
+  /* Clear floats when the inline image is inside a block that doesn't stretch */
+  .img-inline + :global(p)  {
+    overflow: visible; /* let the paragraph flow around the float naturally */
+  }
+</style>
