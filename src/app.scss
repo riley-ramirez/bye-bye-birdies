@@ -89,9 +89,10 @@ html, body {
   font-family: 'Legitima', serif;
   position: absolute;
   color: white;
-  top: 70px;
-  left: 70px;
-  z-index: 2;
+  position: absolute;
+  top: 2rem;
+  left: 2rem;
+  z-index: 10;
   max-width: 500px;
 }
 
@@ -120,6 +121,39 @@ html, body {
   letter-spacing: 2px;
   display: block;
   margin-left: 3rem;
+}
+
+@media (max-width: 768px) {
+  .hero-content {
+    position: static !important;
+    padding: 1.5rem;
+    max-width: 100%;
+  }
+}
+
+.mobile-bird {
+  position: relative;
+  display: inline-block;
+  width: 80%;
+  max-width: 500px;
+  aspect-ratio: 1 / 1;
+}
+
+.mobile-bird img:first-child {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  display: block;
+}
+
+.mobile-frame {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 92%;
+  top: 5%;
+  object-fit: fill;
+  pointer-events: none;
 }
 
 .byline {

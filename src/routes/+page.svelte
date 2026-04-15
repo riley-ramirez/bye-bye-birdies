@@ -3,6 +3,7 @@
   import DocRenderer from '$lib/components/DocRenderer.svelte';
   import type { Block } from '$lib/components/DocRenderer.svelte';
   import { base } from '$app/paths';
+  import Hero from '$lib/components/Hero.svelte';
 
   const blocks = rawBlocks as Block[];
   const PRE_HERO_COUNT = 4; // number of blocks to show before the hero section; 0:html (empty), 1:AnimationsCleaner, 2:html (empty), 3:Background
@@ -22,29 +23,33 @@ This code is in +page.svelte and can be manually coded using HTML or Svelte tags
 <DocRenderer blocks={preHeroBlocks} />
 
 
-<header class="container-fluid vh-100 position-relative overflow-hidden" style="background-image:url('{base}/hero/hero-bird-collage.png');background-size:cover;background-position:center;">
+<header class="container-fluid position-relative overflow-hidden">
 
-  <!-- Video 
-   <video autoplay muted loop playsinline class="bg-video">
-    <source src="{base}/videos/0_hero_stabilized.mp4" type="video/mp4">
-  </video> 
-  -->
+  <!-- On mobile, hide the collage -->
+  <div class="d-none d-md-block">
+    <Hero />
+  </div>
 
-
-
-  <!-- Text content -->
-  <div class="hero-content text-white">
+  <!-- Text floats above on desktop, normal flow on mobile -->
+  <div class="hero-content" style="position: absolute; top: 0.5rem; left: 2.1rem; z-index: 10; padding: 2rem; max-width: 550px;">
     <h1 class="hero-title">
       <span class="line1">Bye Bye</span><br>
       <span class="line2">Birdies</span>
     </h1>
-
-   <p class="fw-light" style="margin-top: 2.5rem; font-size: 1.15rem;">
+    <p class="fw-light" style="margin-top: 2.5rem; font-size: 1.15rem;">
       Six years after scientists reported that billions of birds vanished from 
       the North American landscape since 1970, conservationists are still racing 
       to reverse catastrophic losses that show no sign of slowing down.
     </p>
-  </div> 
+  </div>
+
+  <!-- On mobile, show a single fallback image -->
+  <div class="d-block d-md-none text-center py-4">
+    <div class="mobile-bird">
+      <img src="{base}/illustrations/savannah.png" alt="Savannah Sparrow" />
+      <img src="{base}/illustrations/black-box.png" alt="" class="mobile-frame" />
+    </div>
+  </div>
 
 </header>
 

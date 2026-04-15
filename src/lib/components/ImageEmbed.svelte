@@ -164,8 +164,9 @@
 
   .img-margin--right {
     float: right;
-    margin-right: -400px; /* pushes into right margin */
-    margin-left: 0rem;
+    margin-right: -300px; /* pushes into right margin */
+    margin-left: -2rem;
+    margin-top: -4.5rem;
   }
 
   .img-margin img {
