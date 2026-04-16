@@ -7,12 +7,20 @@
   export let scrubStart: number = 4;
   export let mobileSrc: string = '';
   export let mobileBreakpoint: number = 768;
+  export let captions: {
+    start: number;
+    end: number;
+    text: string;
+    class?: string;
+    persist?: boolean;
+  }[] = [];
 
   $: if (!src && bodyText) {
     try {
       const parsed = JSON.parse(bodyText);
       src = base + '/' + (parsed.img ?? '');
       mobileSrc = parsed.mobileSrc ? base + '/' + parsed.mobileSrc : '';
+      captions = parsed.captions ?? [];
     } catch (e) {
       console.error('Animations: could not parse bodyText', e);
     }
@@ -27,6 +35,29 @@
   let isScrubbing = false;
   let showScrollIndicator = false;
   let indicatorTimer: ReturnType<typeof setTimeout>;
+  let currentTime = 0;
+  let persistedCaption: typeof captions[0] | null = null;
+  // eslint-disable-next-line no-useless-assignment
+  let displayCaption: typeof captions[0] | null = null;
+  let fadingCaption: typeof captions[0] | null = null;
+  let fadeTimer: ReturnType<typeof setTimeout>;
+  let prevDisplay: typeof captions[0] | null = null;
+
+  $: {
+    const found = captions.find(c => currentTime >= c.start && currentTime <= c.end) ?? null;
+    const pastPersisted = captions.find(c => c.persist && currentTime > c.end) ?? null;
+    const beforePersisted = captions.find(c => c.persist && currentTime < c.start) ?? null;
+
+    if (beforePersisted) {
+      persistedCaption = null;
+    } else if (pastPersisted) {
+      persistedCaption = pastPersisted;
+    }
+
+    displayCaption = found ?? persistedCaption;
+  }
+
+  $: handleFade(displayCaption);
 
   function scrub() {
     if (!video || !duration || !isScrubbing) return;
@@ -36,7 +67,6 @@
     const progress = Math.min(Math.max(-top / (height - window.innerHeight), 0), 1);
     const targetTime = scrubStart + progress * (duration - scrubStart);
 
-    // Only seek if the target time is actually buffered
     const buffered = video.buffered;
     for (let i = 0; i < buffered.length; i++) {
       if (targetTime >= buffered.start(i) && targetTime <= buffered.end(i)) {
@@ -45,6 +75,7 @@
       }
     }
 
+    currentTime = targetTime;
     if (progress > 0.05) showScrollIndicator = false;
   }
 
@@ -57,6 +88,7 @@
   }
 
   function checkScrubStart() {
+    currentTime = video.currentTime;
     if (video.currentTime >= scrubStart) {
       startScrubbing();
     } else {
@@ -65,9 +97,22 @@
   }
 
   function handleTimeUpdate() {
+    currentTime = video.currentTime;
     if (!isScrubbing && video.currentTime >= scrubStart) {
       startScrubbing();
     }
+  }
+
+  function handleFade(next: typeof captions[0] | null) {
+    if (!next && prevDisplay?.class === 'caption-one') {
+      fadingCaption = prevDisplay;
+      clearTimeout(fadeTimer);
+      fadeTimer = setTimeout(() => { fadingCaption = null; }, 1500);
+    } else if (next) {
+      fadingCaption = null;
+      clearTimeout(fadeTimer);
+    }
+    prevDisplay = next;
   }
 
   let cleanup: (() => void) | null = null;
@@ -92,13 +137,11 @@
     video.addEventListener(
       'canplaythrough',
       () => {
-        if (isScrubbing) scrub(); // re-run scrub now that video is fully buffered
+        if (isScrubbing) scrub();
       },
       { once: true }
     );
 
-    // Use requestVideoFrameCallback if available for frame-accurate pause,
-    // fall back to timeupdate otherwise
     if ('requestVideoFrameCallback' in HTMLVideoElement.prototype) {
       video.requestVideoFrameCallback(checkScrubStart);
     } else {
@@ -107,7 +150,6 @@
 
     video.load();
 
-    // Fallback: show indicator after 5s if video never triggers
     indicatorTimer = setTimeout(() => {
       if (!showScrollIndicator) {
         isScrubbing = true;
@@ -131,6 +173,7 @@
 
     cleanup = () => {
       clearTimeout(indicatorTimer);
+      clearTimeout(fadeTimer);
       window.removeEventListener('scroll', scrub);
       window.removeEventListener('resize', scrub);
       video.removeEventListener('timeupdate', handleTimeUpdate);
@@ -150,6 +193,16 @@
     <video bind:this={video} preload="auto" muted playsinline disablepictureinpicture>
       <source {src} type="video/mp4" />
     </video>
+
+    {#if displayCaption}
+      <div class="caption {displayCaption.class ?? ''}" role="status">
+        {displayCaption.text}
+      </div>
+    {:else if fadingCaption}
+      <div class="caption {fadingCaption.class ?? ''} fading" role="status">
+        {fadingCaption.text}
+      </div>
+    {/if}
 
     <div class="scroll-indicator" class:visible={showScrollIndicator} aria-hidden="true">
       <span class="scroll-label">Scroll to continue</span>
@@ -244,5 +297,47 @@
   @keyframes bounce {
     0%, 100% { transform: translateY(0); }
     50%       { transform: translateY(5px); }
+  }
+
+  /* Base caption styles — shared by all captions */
+  .caption {
+    position: absolute;
+    bottom: 44%;
+    left: 26.5%;
+    transform: translateX(-50%);
+    color: white;
+    font-family: 'Azeret Mono', monospace;
+    font-size: 2rem;
+    font-weight: 550;
+    text-align: left;
+    max-width: 40%;
+    padding: 0.5rem 1rem;
+    animation: fadeIn 0.77s ease;
+    line-height: 2rem;
+  }
+
+  @keyframes fadeIn {
+    from { opacity: 0; transform: translateX(-50%) translateY(6px); }
+    to   { opacity: 1; transform: translateX(-50%) translateY(0); }
+  }
+
+  :global(.fading) {
+    animation: fadeOut 1.5s ease forwards !important;
+  }
+
+  @keyframes fadeOut {
+    from { opacity: 1; }
+    to   { opacity: 0; }
+  }
+
+  /* Per-caption overrides — add as many classes as you need */
+  :global(.caption-two) {
+    bottom: auto !important;
+    top: 71% !important;
+    left: 31.5% !important;
+    font-size: 1.12rem !important;
+    color: black !important;
+    line-height: 1.5rem !important;
+    font-weight: 200 !important;
   }
 </style>
