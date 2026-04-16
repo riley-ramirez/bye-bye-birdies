@@ -1,14 +1,50 @@
 <script lang="ts">
   import { base } from '$app/paths';
 
+  import { onMount } from 'svelte';
+
+  let collage: HTMLElement;
+
   function p(src: string): string {
     if (!src) return '';
     if (/^data:|^https?:\/\//.test(src)) return src;
     return base + (src.startsWith('/') ? src : '/' + src);
   }
+
+  onMount(() => {
+    let initial = true;
+
+    const observer = new IntersectionObserver(
+      (entries) => {
+        entries.forEach(entry => {
+          if (initial) {
+            initial = false;
+            return;
+          }
+
+          if (!entry.isIntersecting) {
+            const cells = Array.from(collage.querySelectorAll('.cell'))
+              .sort(() => Math.random() - 0.5);
+            cells.forEach((cell, i) => {
+              (cell as HTMLElement).style.setProperty('--delay', `${i * 90}ms`);
+              cell.classList.add('hiding');
+            });
+          } else {
+            collage.querySelectorAll('.cell').forEach(cell => {
+              cell.classList.remove('hiding');
+            });
+          }
+        });
+      },
+      { threshold: 0, rootMargin: '-97% 0px 0px 0px' }
+    );
+
+    observer.observe(collage);
+    return () => observer.disconnect();
+  });
 </script>
 
-<section class="collage" aria-label="Bird illustration collage">
+<section class="collage" bind:this={collage} aria-label="Bird illustration collage">
 
   <div class="cell c1">
     <img src={p('/illustrations/thick-billed.png')} alt="Thick-billed Longspur" />
@@ -78,6 +114,11 @@
     object-fit: contain;
     object-position: center;
     display: block;
+    transition: opacity 0.6s ease var(--delay, 0ms);
+  }
+
+  :global(.cell.hiding > img:first-child) {
+    opacity: 0;
   }
 
   .frame {

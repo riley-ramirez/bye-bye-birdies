@@ -334,7 +334,7 @@
   :global(.caption-two) {
     bottom: auto !important;
     top: 71% !important;
-    left: 31.5% !important;
+    left: 30% !important;
     font-size: 1.12rem !important;
     color: black !important;
     line-height: 1.5rem !important;

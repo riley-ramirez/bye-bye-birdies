@@ -131,6 +131,30 @@ html, body {
   }
 }
 
+@media (max-width: 768px) {
+  .hero-content {
+    position: static !important;
+    padding: 1.5rem;
+    max-width: 100%;
+  }
+
+  .hero-title {
+    font-size: 3rem;
+    line-height: 0.6;
+  }
+
+  .hero-title .line1 {
+    font-size: 3rem;
+    letter-spacing: 1px;
+  }
+
+  .hero-title .line2 {
+    font-size: 5.5rem;
+    letter-spacing: 1px;
+    margin-left: 1.5rem;
+  }
+}
+
 .mobile-bird {
   position: relative;
   display: inline-block;
