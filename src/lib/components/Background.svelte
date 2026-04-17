@@ -3,7 +3,6 @@
   import VideoEmbed from '$lib/components/VideoEmbed.svelte';
   import CollageEmbed from '$lib/components/CollageEmbed.svelte';
 
-  export let img = '';
   export let bodyHtml = '';
 
   type HtmlChunk = { type: 'html'; html: string };
@@ -103,9 +102,6 @@
 </script>
 
 <section class="background-section">
-  <div class="bg-clip">
-    <img class="bg" src="{base}/{img}" alt="" aria-hidden="true" />
-  </div>
   <div class="background-content container">
     <div class="row justify-content-center">
       <div class="col-12 col-sm-10 col-lg-6 col-xxl-7">
@@ -157,25 +153,6 @@
 </section>
 
 <style>
-  .bg-clip {
-    position: absolute;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 112.5vw;
-    overflow: hidden;
-    z-index: 0;
-    pointer-events: none;
-  }
-
-  .bg {
-    width: 100%;
-    height: 100%;
-    object-fit: cover;
-    object-position: center;
-    pointer-events: none;
-    user-select: none;
-  }
 
   .background-section {
     position: relative;

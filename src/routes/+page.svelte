@@ -6,7 +6,7 @@
   import Hero from '$lib/components/Hero.svelte';
 
   const blocks = rawBlocks as Block[];
-  const PRE_HERO_COUNT = 4; // number of blocks to show before the hero section; 0:html (empty), 1:AnimationsCleaner, 2:html (empty), 3:Background
+  const PRE_HERO_COUNT = 2; // number of blocks to show before the hero section; 0:html (empty), 1:AnimationsCleaner, 2:html (empty), 3:Background
   const preHeroBlocks = blocks.slice(0, PRE_HERO_COUNT);
   const postHeroBlocks = blocks.slice(PRE_HERO_COUNT);
 
@@ -70,7 +70,6 @@ This code is in +page.svelte and can be manually coded using HTML or Svelte tags
     </div>
   </div>
 </div>
-
 
 <!-- DO NOT EDIT (except to modify classes). This will become code imported from Google Doc. -->
 <div class="container">

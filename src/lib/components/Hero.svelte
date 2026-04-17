@@ -26,7 +26,7 @@
             const cells = Array.from(collage.querySelectorAll('.cell'))
               .sort(() => Math.random() - 0.5);
             cells.forEach((cell, i) => {
-              (cell as HTMLElement).style.setProperty('--delay', `${i * 90}ms`);
+              (cell as HTMLElement).style.setProperty('--delay', `${i * 150}ms`);
               cell.classList.add('hiding');
             });
           } else {
