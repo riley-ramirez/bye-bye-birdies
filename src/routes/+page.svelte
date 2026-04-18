@@ -23,35 +23,8 @@ This code is in +page.svelte and can be manually coded using HTML or Svelte tags
 <DocRenderer blocks={preHeroBlocks} />
 
 
-<header class="container-fluid position-relative overflow-hidden">
+<Hero />
 
-  <!-- On mobile, hide the collage -->
-  <div class="d-none d-md-block">
-    <Hero />
-  </div>
-
-  <!-- Text floats above on desktop, normal flow on mobile -->
-  <div class="hero-content" style="position: absolute; top: 0.5rem; left: 2.1rem; z-index: 10; padding: 2rem; max-width: 550px;">
-    <h1 class="hero-title">
-      <span class="line1">Bye Bye</span><br>
-      <span class="line2">Birdies</span>
-    </h1>
-    <p class="fw-light" style="margin-top: 2.5rem; font-size: 1.15rem;">
-      Six years after scientists reported that billions of birds vanished from 
-      the North American landscape since 1970, conservationists are still racing 
-      to reverse catastrophic losses that show no sign of slowing down.
-    </p>
-  </div>
-
-  <!-- On mobile, show a single fallback image -->
-  <div class="d-block d-md-none text-center py-4">
-    <div class="mobile-bird">
-      <img src="{base}/illustrations/savannah.png" alt="Savannah Sparrow" />
-      <img src="{base}/illustrations/black-box.png" alt="" class="mobile-frame" />
-    </div>
-  </div>
-
-</header>
 
 <!-- Byline -->
 <div class="byline container">

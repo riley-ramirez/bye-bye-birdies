@@ -1,11 +1,17 @@
 <!-- src/lib/components/FourTileCollage.svelte -->
 <script lang="ts">
   import { base } from '$app/paths';
+  import { onMount, onDestroy } from 'svelte';
+  import { browser } from '$app/environment';
 
   export let images: string = '';
   export let alts: string = '';
   export let caption: string = '';
   export let width: string = '95vw';
+
+  let sectionEl: HTMLElement;
+  let isVisible = false;
+  let observer: IntersectionObserver | null = null;
 
   function normalizeStaticPath(raw: string): string {
     const s = raw.trim();
@@ -30,88 +36,127 @@
       alt: altList[i] ?? '',
     }));
   })();
+
+  onMount(() => {
+    if (!browser) return;
+
+    observer = new IntersectionObserver(
+      (entries) => {
+        if (!entries[0].isIntersecting) return;
+        isVisible = true;
+        observer?.disconnect();
+        observer = null;
+      },
+      { rootMargin: '500px 0px' }
+    );
+
+    if (sectionEl) observer.observe(sectionEl);
+  });
+
+  onDestroy(() => {
+    observer?.disconnect();
+  });
 </script>
 
-<div class="collage-bleed">
+<div class="collage-bleed" bind:this={sectionEl}>
   <div class="collage-inner" style="width: {width}">
 
-    <!-- ── Top row ── -->
-    <div class="row row-top">
-      <!-- eslint-disable-next-line svelte/no-at-html-tags -->
-      <p class="caption">{@html caption}</p>
+    {#if isVisible}
 
-      <div class="tile tile-1">
-        {#if tiles[0]?.type === 'video'}
-          <video src={tiles[0].src} aria-label={tiles[0].alt} autoplay muted loop playsinline>
-            <track kind="captions" />
-          </video>
-        {:else}
-          <img src={tiles[0]?.src ?? ''} alt={tiles[0]?.alt ?? ''} />
-        {/if}
-      </div>
+      <!-- ── Top row ── -->
+      <div class="row row-top">
+        <!-- eslint-disable-next-line svelte/no-at-html-tags -->
+        <p class="caption">{@html caption}</p>
 
-      <div class="right-margin"></div>
-    </div>
-
-    <!-- ── Bottom row ── -->
-    <div class="row row-bottom">
-
-      <div class="tile tile-2">
-        {#if tiles[1]?.type === 'video'}
-          <video src={tiles[1].src} aria-label={tiles[1].alt} autoplay muted loop playsinline>
-            <track kind="captions" />
-          </video>
-        {:else}
-          <img src={tiles[1]?.src ?? ''} alt={tiles[1]?.alt ?? ''} />
-        {/if}
-      </div>
-
-      <div class="right-col-wrapper">
-
-        <div class="tile tile-3">
-          {#if tiles[2]?.type === 'video'}
-            <video src={tiles[2].src} aria-label={tiles[2].alt} autoplay muted loop playsinline>
+        <div class="tile tile-1">
+          {#if tiles[0]?.type === 'video'}
+            <video src={tiles[0].src} aria-label={tiles[0].alt} autoplay muted loop playsinline>
               <track kind="captions" />
             </video>
           {:else}
-            <img src={tiles[2]?.src ?? ''} alt={tiles[2]?.alt ?? ''} />
+            <img src={tiles[0]?.src ?? ''} alt={tiles[0]?.alt ?? ''} />
           {/if}
         </div>
 
-        <div class="tile-4-wrapper">
-          <div class="tile tile-4">
-            {#if tiles[3]?.type === 'video'}
-              <video src={tiles[3].src} aria-label={tiles[3].alt} autoplay muted loop playsinline>
+        <div class="right-margin"></div>
+      </div>
+
+      <!-- ── Bottom row ── -->
+      <div class="row row-bottom">
+
+        <div class="tile tile-2">
+          {#if tiles[1]?.type === 'video'}
+            <video src={tiles[1].src} aria-label={tiles[1].alt} autoplay muted loop playsinline>
+              <track kind="captions" />
+            </video>
+          {:else}
+            <img src={tiles[1]?.src ?? ''} alt={tiles[1]?.alt ?? ''} />
+          {/if}
+        </div>
+
+        <div class="right-col-wrapper">
+
+          <div class="tile tile-3">
+            {#if tiles[2]?.type === 'video'}
+              <video src={tiles[2].src} aria-label={tiles[2].alt} autoplay muted loop playsinline>
                 <track kind="captions" />
               </video>
             {:else}
-              <img src={tiles[3]?.src ?? ''} alt={tiles[3]?.alt ?? ''} />
+              <img src={tiles[2]?.src ?? ''} alt={tiles[2]?.alt ?? ''} />
             {/if}
           </div>
+
+          <div class="tile-4-wrapper">
+            <div class="tile tile-4">
+              {#if tiles[3]?.type === 'video'}
+                <video src={tiles[3].src} aria-label={tiles[3].alt} autoplay muted loop playsinline>
+                  <track kind="captions" />
+                </video>
+              {:else}
+                <img src={tiles[3]?.src ?? ''} alt={tiles[3]?.alt ?? ''} />
+              {/if}
+            </div>
+          </div>
+
         </div>
 
       </div>
 
-    </div>
+    {:else}
+      <!-- Placeholder maintains layout height while images haven't loaded -->
+      <div class="placeholder">
+        <div class="row row-top">
+          <div class="placeholder-caption"></div>
+          <div class="tile tile-1 placeholder-tile"></div>
+          <div class="right-margin"></div>
+        </div>
+        <div class="row row-bottom">
+          <div class="tile tile-2 placeholder-tile"></div>
+          <div class="right-col-wrapper">
+            <div class="tile tile-3 placeholder-tile"></div>
+            <div class="tile-4-wrapper">
+              <div class="tile tile-4 placeholder-tile"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    {/if}
 
   </div>
 </div>
 
 <style>
   .collage-bleed {
-    /* break out of article column */
     width: 100vw;
     position: relative;
     left: 50%;
     margin-left: -50vw;
     margin-right: -50vw;
-    margin-top: 2.5rem;
-    margin-bottom: 2.5rem;
-    /* center the inner collage */
+    margin-top: 8rem;
+    margin-bottom: 8rem;
     display: flex;
     justify-content: center;
     align-items: flex-start;
-    /* reset any inherited figure/block styles */
     padding: 0;
     border: none;
     background: none;
@@ -130,7 +175,6 @@
 
   .row {
     display: flex;
-    /* ALL horizontal gaps between tiles use the same --gap */
     gap: var(--gap);
     width: 100%;
     padding: 0;
@@ -191,7 +235,6 @@
     min-width: 0;
     display: flex;
     flex-direction: column;
-    /* vertical gap between tile-3 and tile-4 — same variable */
     gap: var(--gap);
     margin: 0;
     padding: 0;
@@ -203,7 +246,6 @@
     margin: 0;
   }
 
-  /* tile-4 inset so its right edge aligns with tile-1's right edge */
   .tile-4-wrapper {
     width: 100%;
     padding-right: 19%;
@@ -214,6 +256,19 @@
     width: 100%;
     aspect-ratio: 5 / 4;
     margin: 0;
+  }
+
+  /* Placeholder tiles match the same dimensions so layout doesn't shift */
+  .placeholder-tile {
+    background: transparent;
+  }
+
+  .placeholder-caption {
+    flex: 1;
+    min-width: 0;
+    margin-left: 10rem;
+    margin-right: 2.5rem;
+    margin-bottom: 1rem;
   }
 
   @media (max-width: 768px) {
@@ -256,6 +311,10 @@
 
     .tile-4-wrapper {
       padding-right: 0;
+    }
+
+    .placeholder-caption {
+      margin-left: 0;
     }
   }
 </style>

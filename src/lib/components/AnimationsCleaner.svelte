@@ -37,6 +37,7 @@
     textClass?: string;
     imgSrc?: string;
     imgClass?: string;
+    subCaption?: string;
   }[] = [];
 
   $: if (!src && bodyText) {
@@ -138,6 +139,28 @@
   $: panelStyles = overlayContent.map((item, i) =>
     calcPanelStyle(item, overlayProgress, i === overlayContent.length - 1)
   );
+
+  let gifSrcs: string[] = [];
+
+  $: if (overlayContent.length && !gifSrcs.length) {
+    gifSrcs = overlayContent.map(item =>
+      item.imgSrc?.endsWith('.gif') ? '' : (item.imgSrc ?? '')
+    );
+  }
+
+  $: {
+    overlayContent.forEach((item, i) => {
+      if (item.imgSrc && overlayProgress >= item.start - 10 && overlayProgress < item.start + FADE_PX) {
+        if (gifSrcs[i] !== item.imgSrc) {
+          gifSrcs[i] = '';
+          requestAnimationFrame(() => {
+            gifSrcs[i] = item.imgSrc ?? '';
+            gifSrcs = [...gifSrcs]; // trigger reactivity
+          });
+        }
+      }
+    });
+  }
 
   $: {
     const found = captions.find(c => currentTime >= c.start && currentTime <= c.end) ?? null;
@@ -295,6 +318,16 @@
   }
 
   onMount(() => {
+    // Preload the video
+    const activeSrc = (mobileSrc && window.innerWidth < mobileBreakpoint) ? mobileSrc : src;
+    if (activeSrc) {
+      const link = document.createElement('link');
+      link.rel = 'preload';
+      link.as = 'video';
+      link.href = activeSrc;
+      document.head.appendChild(link);
+    }
+
     return () => cleanup?.();
   });
 
@@ -353,11 +386,22 @@
             style={panelStyles[i]}
           >
             {#if item.imgSrc}
-              <img
-                src={item.imgSrc}
-                alt=""
-                class="overlay-image {item.imgClass ?? ''}"
-              />
+              {#if item.subCaption}
+                <div class="img-with-caption">
+                  <img
+                    src={gifSrcs[i] ?? item.imgSrc}
+                    alt=""
+                    class="overlay-image {item.imgClass ?? ''}"
+                  />
+                  <p class="sub-caption">{item.subCaption}</p>
+                </div>
+              {:else}
+                <img
+                  src={gifSrcs[i] ?? item.imgSrc}
+                  alt=""
+                  class="overlay-image {item.imgClass ?? ''}"
+                />
+              {/if}
             {/if}
             {#if item.text}
               <p class="overlay-text {item.textClass ?? ''}">{item.text}</p>
@@ -492,6 +536,30 @@
     margin: 0;
   }
 
+  .img-with-caption {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    flex-shrink: 0;
+    max-width: 60%;
+  }
+
+  .img-with-caption .overlay-image {
+    width: 100%;
+    height: auto;
+  }
+
+  .sub-caption {
+    color: rgb(0, 0, 0);
+    font-family: 'Azeret Mono', monospace;
+    font-size: 0.60rem;
+    font-weight: 300;
+    margin-top: 0.3rem;
+    margin-left: 7rem;
+    text-align: left;
+    max-width: 100%;
+  }
+
   /* ── Per-image size overrides ────────────────────────────────────────── */
   :global(.overlay-img-one) { width: 60%; }
   :global(.overlay-img-two) { width: 60%; }
@@ -511,14 +579,16 @@
   .overlay-panel[data-block="three"] .overlay-text {
     text-align: left;
     max-width: 50%;
+    z-index: 2;
   }
 
   .overlay-panel[data-block="three"] .overlay-image {
-    width: 12%;
+    width: 25%;
     object-fit: contain;
     margin-top: -5rem;
-    margin-left: 40%;
+    margin-left: 55%;
     order: 2;
+    z-index: 1;
   }
 
   .overlay-panel[data-block="three"] .overlay-text {

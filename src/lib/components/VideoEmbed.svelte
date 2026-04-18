@@ -197,6 +197,7 @@
             controls={controlsBool}
             muted={muteBool}
             playsinline={playsinlineBool}
+            preload="none"
           >
             {#if captionsSrc}
               <track kind="captions" src={captionsSrc} srclang={srclang} label={label} default />
@@ -208,10 +209,10 @@
             title={title}
             allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
             allowfullscreen
+            loading="lazy"
           ></iframe>
         {/if}
       </div>
-
       {#if caption}
         <figcaption class="mt-2 text-muted small">{caption}</figcaption>
       {/if}
@@ -233,6 +234,7 @@
                   controls={controlsBool}
                   muted={muteBool}
                   playsinline={playsinlineBool}
+                  preload="none"
                 >
                   {#if captionsSrc}
                     <track kind="captions" src={captionsSrc} srclang={srclang} label={label} default />
@@ -244,13 +246,13 @@
                   title={title}
                   allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
                   allowfullscreen
+                  loading="lazy"
                 ></iframe>
               {/if}
             </div>
           </div>
         </div>
       </div>
-
       {#if caption}
         <figcaption class="mt-2 text-muted small text-center">{caption}</figcaption>
       {/if}
@@ -269,6 +271,7 @@
             controls={controlsBool}
             muted={muteBool}
             playsinline={playsinlineBool}
+            preload="none"
           >
             {#if captionsSrc}
               <track kind="captions" src={captionsSrc} srclang={srclang} label={label} default />
@@ -280,10 +283,10 @@
             title={title}
             allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
             allowfullscreen
+            loading="lazy"
           ></iframe>
         {/if}
       </div>
-
       {#if caption}
         <figcaption class="mt-2 text-muted small text-center">{caption}</figcaption>
       {/if}

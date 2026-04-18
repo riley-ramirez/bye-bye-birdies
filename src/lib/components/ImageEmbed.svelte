@@ -72,7 +72,7 @@
 {#if shouldRender}
   {#if size === 'full'}
     <figure class="my-3 full-bleed">
-      <img src={finalSrc} alt={finalAlt} class="img-fluid border" />
+      <img src={finalSrc} alt={finalAlt} class="img-fluid border" loading="lazy" />
       {#if caption}
         <figcaption class="mt-2 text-muted small">{caption}</figcaption>
       {/if}
@@ -84,7 +84,7 @@
       <div class="container-fluid">
         <div class="row justify-content-center">
           <div class="col-12 col-lg-10 col-xxl-8">
-            <img src={finalSrc} alt={finalAlt} class="img-fluid border" />
+            <img src={finalSrc} alt={finalAlt} class="img-fluid border" loading="lazy" />
             {#if caption}
               <figcaption class="mt-2 text-muted small">{caption}</figcaption>
             {/if}
@@ -95,7 +95,7 @@
 
   {:else if isInline}
     <figure class="img-inline img-inline--{size === 'inline-left' ? 'left' : 'right'}">
-      <img src={finalSrc} alt={finalAlt} class="img-fluid" />
+      <img src={finalSrc} alt={finalAlt} class="img-fluid" loading="lazy" />
       {#if caption}
         <figcaption class="mt-2 text-muted small">{caption}</figcaption>
       {/if}
@@ -103,7 +103,7 @@
 
   {:else if isMargin}
     <figure class="img-margin img-margin--{size === 'margin-left' ? 'left' : 'right'}">
-      <img src={finalSrc} alt={finalAlt} class="img-fluid" />
+      <img src={finalSrc} alt={finalAlt} class="img-fluid" loading="lazy" />
       {#if caption}
         <figcaption class="mt-2 text-muted small">{caption}</figcaption>
       {/if}
@@ -112,7 +112,7 @@
   {:else}
     <!-- fit -->
     <figure class="my-3">
-      <img src={finalSrc} alt={finalAlt} class="img-fluid border" />
+      <img src={finalSrc} alt={finalAlt} class="img-fluid border" loading="lazy" />
       {#if caption}
         <figcaption class="mt-2 text-muted small">{caption}</figcaption>
       {/if}
@@ -164,9 +164,9 @@
 
   .img-margin--right {
     float: right;
-    margin-right: -300px; /* pushes into right margin */
+    margin-right: -250px; /* pushes into right margin */
     margin-left: -2rem;
-    margin-top: -4.5rem;
+    margin-top: 1rem;
   }
 
   .img-margin img {
