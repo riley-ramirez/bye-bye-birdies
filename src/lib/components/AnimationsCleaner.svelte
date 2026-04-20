@@ -585,7 +585,7 @@
   .overlay-panel[data-block="three"] .overlay-image {
     width: 25%;
     object-fit: contain;
-    margin-top: -5rem;
+    margin-top: -6rem;
     margin-left: 55%;
     order: 2;
     z-index: 1;

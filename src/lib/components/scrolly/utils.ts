@@ -67,6 +67,8 @@ export function stripHtmlToText(html: string): string {
 		.replace(/\u2018|\u2019/g, "'")   // curly single quotes → straight
 		.replace(/&quot;/g, '"')
 		.replace(/&amp;/g, '&')
+		.replace(/&lt;/g, '<')      // ← add this
+        .replace(/&gt;/g, '>')      // ← add this
 		.trim();
 }
 

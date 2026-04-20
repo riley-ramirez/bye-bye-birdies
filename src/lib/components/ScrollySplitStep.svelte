@@ -37,7 +37,6 @@
 		display: flex;
 		flex-direction: column;
 		justify-content: flex-end;
-		padding-bottom: 0vh;
 	}
 
 
@@ -45,7 +44,6 @@
 		padding: 1.5rem;
         margin-left: 2rem;
         margin-right: auto;
-        max-width: 800px;
 	}
 
 	.step-body {

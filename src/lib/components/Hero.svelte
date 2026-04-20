@@ -243,16 +243,16 @@
     }
 
     .hero-title .line1 {
-      font-size: 3rem;
+      font-size: 5rem;
     }
 
     .hero-title .line2 {
-      font-size: 5.5rem;
-      margin-left: 1.5rem;
+      font-size: 8rem;
+      margin-left: 2.5rem;
     }
 
     .hero-content p {
-      font-size: 1rem;
+      font-size: 1.2rem;
     }
   }
 

@@ -39,7 +39,8 @@
 	// ---- Video state ----
 
 	let bgIndex = 0;
-	let loadedIndices: SvelteSet<number> = new SvelteSet([0, 1]);
+	// no initializer — $: block sets the real value immediately
+	let loadedIndices: SvelteSet<number>;
 
 	// translateY progress for each video layer, 0 = fully in, 1 = fully below
 	let videoProgress: number[];
@@ -48,6 +49,8 @@
 	let videoEls: (HTMLVideoElement | null)[] = [];
 	let sentinelEl: HTMLElement | null = null;
 	let videoInnerEl: HTMLElement | null = null;
+	// layer refs for hiding covered videos
+	let layerEls: (HTMLElement | null)[] = [];
 	// Measured position of video box for fixed-position layers
 	let videoBox = { top: 0, left: 0, width: 0, height: 0 };
 	// Slide distance: from viewport bottom up to video box top
@@ -57,7 +60,8 @@
 		if (!resolvedSteps.length) return;
 		const clamped = Math.max(0, Math.min(newIndex, resolvedSteps.length - 1));
 
-		// Preload neighbours
+		// Keep all previously loaded steps plus neighbours — never unload
+		// so scrolling back up doesn't cause a reload flash
 		const next = new SvelteSet(loadedIndices);
 		for (const n of [clamped - 1, clamped, clamped + 1]) {
 			if (n >= 0 && n < resolvedSteps.length) next.add(n);
@@ -130,6 +134,14 @@
 
 		videoProgress = newProgress;
 
+		// Hide layers fully covered by a higher layer
+		for (let i = 0; i < newProgress.length - 1; i++) {
+			const el = layerEls[i];
+			if (!el) continue;
+			const coveredByAbove = newProgress.slice(i + 1).some(p => p === 0);
+			el.style.visibility = coveredByAbove ? 'hidden' : 'visible';
+		}
+
 		if (newActive !== bgIndex) showStep(newActive);
 	}
 
@@ -169,12 +181,14 @@
 		loadedIndices = new SvelteSet([0, 1].filter(i => i < resolvedSteps.length));
 		textBoxEls.length = resolvedSteps.length;
 		videoEls.length = resolvedSteps.length;
+		layerEls.length = resolvedSteps.length;
 		videoProgress = resolvedSteps.map((_, i) => (i === 0 ? 0 : 1));
 	} else {
 		bgIndex = 0;
 		loadedIndices = new SvelteSet();
 		textBoxEls = [];
 		videoEls = [];
+		layerEls = [];
 		videoProgress = [];
 	}
 
@@ -257,14 +271,15 @@
 						{@const m = toMedia(step)}
 						<div
 							class="video-layer"
-							style="position: fixed; top: {videoBox.top}px; 
-							left: {videoBox.left}px; width: {videoBox.width}px; 
+							bind:this={layerEls[i]}
+							style="position: fixed; 
+							top: {videoBox.top}px; 
+							left: {videoBox.left}px; 
+							width: {videoBox.width}px; 
 							height: {videoBox.height}px; 
 							transform: translateY({(videoProgress[i] ?? (i === 0 ? 0 : 1)) * slideDistancePx}px); 
-							z-index: {i + 1}; 
-							overflow: hidden; 
+							z-index: {i + 1}; overflow: hidden; display: {videoBox.width === 0 ? 'none' : 'block'}; 
 							border: 15px solid #fff; 
-							box-shadow: 0 8px 32px rgba(0,0,0,0.18); 
 							box-sizing: border-box;"
 						>
 							{#if loadedIndices.has(i)}
@@ -298,7 +313,7 @@
 	.scrolly-split {
 		position: relative;
 		margin-top: 10rem;
-		margin-bottom: 15rem;
+		margin-bottom: 10rem;
 	}
 
 	/* ---- Video column header — sits above the video, left-aligned ---- */
@@ -316,8 +331,8 @@
 
 	.split-body {
 		display: grid;
-		grid-template-columns: 400px 1fr;
-		gap: 1.5rem;
+		grid-template-columns: 410px 1fr;
+		gap: 1rem;
 		align-items: start;
 	}
 
@@ -366,6 +381,8 @@
 		width: calc((100vh - var(--video-top) - 7rem) * (12 / 9));
 		max-width: 100%;
 		overflow: hidden;
+		box-shadow: 10px 15px 32px rgba(0,0,0,0.18); 
+
 	}
 
 	/* ---- Video layers — stack on top of each other ---- */
