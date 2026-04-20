@@ -260,36 +260,52 @@
 
   {:else if normalizedSize === 'fit'}
     <figure class="my-3">
-      <div class="ratio ratio-16x9">
-        {#if resolved.kind === 'file'}
-          <!-- svelte-ignore a11y_media_has_caption -->
-          <video
-            src={resolved.fileUrl}
-            title={title}
-            class="w-100 h-100"
-            autoplay={autoplayBool}
-            controls={controlsBool}
-            muted={muteBool}
-            playsinline={playsinlineBool}
-            preload="none"
-          >
-            {#if captionsSrc}
-              <track kind="captions" src={captionsSrc} srclang={srclang} label={label} default />
-            {/if}
-          </video>
-        {:else}
-          <iframe
-            src={resolved.embedUrl}
-            title={title}
-            allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-            allowfullscreen
-            loading="lazy"
-          ></iframe>
+      <div class="polaroid">
+        <div class="ratio ratio-16x9">
+          {#if resolved.kind === 'file'}
+            <!-- svelte-ignore a11y_media_has_caption -->
+            <video
+              src={resolved.fileUrl}
+              title={title}
+              class="w-100 h-100"
+              autoplay={autoplayBool}
+              controls={controlsBool}
+              muted={muteBool}
+              playsinline={playsinlineBool}
+              preload="none"
+            >
+              {#if captionsSrc}
+                <track kind="captions" src={captionsSrc} srclang={srclang} label={label} default />
+              {/if}
+            </video>
+          {:else}
+            <iframe
+              src={resolved.embedUrl}
+              title={title}
+              allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+              allowfullscreen
+              loading="lazy"
+            ></iframe>
+          {/if}
+        </div>
+        {#if caption}
+          <!-- svelte-ignore a11y_figcaption_parent -->
+          <figcaption class="mt-2 text-muted text-center" style="font-family: Azeret Mono, monospace; font-size: small;">{caption}</figcaption>
         {/if}
       </div>
-      {#if caption}
-        <figcaption class="mt-2 text-muted small text-center">{caption}</figcaption>
-      {/if}
     </figure>
   {/if}
 {/if}
+
+<style>
+
+.polaroid {
+  background: rgb(255, 255, 255);
+  padding: 10px 10px 10px 10px; /* thick bottom = polaroid look */
+  box-shadow: 2px 4px 12px rgba(0, 0, 0, 0.15);
+  display: inline-block;
+  width: 100%;
+  margin-bottom: 1.5rem;
+}
+
+</style>

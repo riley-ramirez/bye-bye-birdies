@@ -137,6 +137,7 @@
     float: right;
     margin-left: 1.25rem;
     margin-bottom: 0rem;
+    rotate: 1.5deg;
   }
 
   .img-inline img {
