@@ -15,16 +15,9 @@
 	export let steps: Step[] | undefined;
 	export let bodyHtml: string | undefined;
 
-	/** Height allocated per step (vh). Controls how long each step "holds" while scrolling. */
 	export let vhPerStep: number | string | undefined = 110;
-
-	/** Crossfade duration in ms. */
 	export let fadeMs: number | string | undefined = 500;
-
-	/** Header text to show pinned above the text column. */
 	export let header: string | undefined;
-
-	/** How far from the top the sticky video sits (px). Should match your navbar height if any. */
 	export let videoTopPx: number | string | undefined = 0;
 
 	// ---- Derived ----
@@ -39,29 +32,21 @@
 	// ---- Video state ----
 
 	let bgIndex = 0;
-	// no initializer — $: block sets the real value immediately
 	let loadedIndices: SvelteSet<number>;
-
-	// translateY progress for each video layer, 0 = fully in, 1 = fully below
 	let videoProgress: number[];
 
 	let sectionEl: HTMLElement | null = null;
 	let videoEls: (HTMLVideoElement | null)[] = [];
 	let sentinelEl: HTMLElement | null = null;
 	let videoInnerEl: HTMLElement | null = null;
-	// layer refs for hiding covered videos
 	let layerEls: (HTMLElement | null)[] = [];
-	// Measured position of video box for fixed-position layers
 	let videoBox = { top: 0, left: 0, width: 0, height: 0 };
-	// Slide distance: from viewport bottom up to video box top
 	let slideDistancePx: number = 0;
 
 	async function showStep(newIndex: number) {
 		if (!resolvedSteps.length) return;
 		const clamped = Math.max(0, Math.min(newIndex, resolvedSteps.length - 1));
 
-		// Keep all previously loaded steps plus neighbours — never unload
-		// so scrolling back up doesn't cause a reload flash
 		const next = new SvelteSet(loadedIndices);
 		for (const n of [clamped - 1, clamped, clamped + 1]) {
 			if (n >= 0 && n < resolvedSteps.length) next.add(n);
@@ -71,11 +56,16 @@
 
 		await tick();
 
-		// Play current video, pause others
+		// Only play if section is actually in the viewport
+		const inView = sectionEl
+			? sectionEl.getBoundingClientRect().bottom > 0 &&
+			  sectionEl.getBoundingClientRect().top < window.innerHeight
+			: false;
+
 		for (let i = 0; i < videoEls.length; i++) {
 			const el = videoEls[i];
 			if (!el) continue;
-			if (i === clamped) {
+			if (i === clamped && inView) {
 				el.loop = true;
 				try {
 					const p = el.play();
@@ -96,7 +86,6 @@
 		if (!resolvedSteps.length) return;
 
 		const vh = window.innerHeight;
-		// Measure first so triggerTop uses the current frame's value
 		if (videoInnerEl) {
 			const rect = videoInnerEl.getBoundingClientRect();
 			videoBox = { top: rect.top, left: rect.left, width: rect.width, height: rect.height };
@@ -104,12 +93,10 @@
 		}
 
 		const triggerBottom = vh * 1;
-		// triggerTop = video top in viewport so card top aligns with video top on arrival
 		const triggerTop = videoBox.top > 0 ? videoBox.top : videoTop;
 
 		let newActive = 0;
 		const newProgress = resolvedSteps.map((_, i) => {
-			// First video is always fully in
 			if (i === 0) return 0;
 
 			const el = textBoxEls[i];
@@ -117,24 +104,19 @@
 
 			const cardTop = el.getBoundingClientRect().top;
 
-			// Before trigger: fully below viewport
 			if (cardTop >= triggerBottom) return 1;
-			// After fully in: fully visible
 			if (cardTop <= triggerTop) return 0;
 
-			// Interpolate between triggerBottom and triggerTop
 			const range = triggerBottom - triggerTop;
 			return (cardTop - triggerTop) / range;
 		});
 
-		// Active = last video that has started sliding in (progress < 1)
 		for (let i = 0; i < newProgress.length; i++) {
 			if (newProgress[i] < 1) newActive = i;
 		}
 
 		videoProgress = newProgress;
 
-		// Hide layers fully covered by a higher layer
 		for (let i = 0; i < newProgress.length - 1; i++) {
 			const el = layerEls[i];
 			if (!el) continue;
@@ -214,16 +196,18 @@
 			{ rootMargin: '400px 0px' }
 		);
 
-		// Start playing the first video immediately on mount
 		showStep(0);
 		if (sectionEl) observer.observe(sectionEl);
 
 		visibilityObserver = new IntersectionObserver(
 			(entries) => {
-				document.body.classList.toggle(
-					'scrolly-split-active',
-					entries[0].isIntersecting
-				);
+				const inView = entries[0].isIntersecting;
+				document.body.classList.toggle('scrolly-split-active', inView);
+				if (inView) {
+					showStep(bgIndex);
+				} else {
+					videoEls.forEach(el => el?.pause());
+				}
 			},
 			{ threshold: 0 }
 		);
@@ -316,8 +300,6 @@
 		margin-bottom: 10rem;
 	}
 
-	/* ---- Video column header — sits above the video, left-aligned ---- */
-
 	.split-video-header {
 		margin: 0 0 1rem 0;
 		font-size: 2rem;
@@ -327,16 +309,12 @@
 		text-align: left;
 	}
 
-	/* ---- Two-column grid ---- */
-
 	.split-body {
 		display: grid;
 		grid-template-columns: 410px 1fr;
 		gap: 1rem;
 		align-items: start;
 	}
-
-	/* ---- Left text column ---- */
 
 	.split-text {
 		position: relative;
@@ -349,14 +327,11 @@
 		pointer-events: auto;
 	}
 
-	/* ---- Right sticky video column ---- */
-
 	.split-video-col {
 		position: sticky;
 		top: var(--video-top);
 		align-self: start;
 		height: calc(100vh - var(--video-top));
-		/* Equal padding all sides for breathing room */
 		padding: 0rem 2rem 3rem 1rem;
 		box-sizing: border-box;
 		z-index: 1;
@@ -365,7 +340,6 @@
 		align-items: flex-start;
 	}
 
-	/* Header + video as one unit */
 	.split-video-group {
 		display: flex;
 		flex-direction: column;
@@ -375,22 +349,16 @@
 
 	.split-video-inner {
 		position: relative;
-		/* Height = full column minus padding (5rem top+bottom) minus header (~2rem) */
 		height: calc(100vh - var(--video-top) - 7rem);
-		/* Width derived from height via 12:9 ratio */
 		width: calc((100vh - var(--video-top) - 7rem) * (12 / 9));
 		max-width: 100%;
 		overflow: hidden;
-		box-shadow: 10px 15px 32px rgba(0,0,0,0.18); 
-
+		box-shadow: 10px 15px 32px rgba(0,0,0,0.18);
 	}
-
-	/* ---- Video layers — stack on top of each other ---- */
 
 	.video-layer {
 		position: fixed;
 		inset: 0;
-		/* No opacity transition — slide only */
 		will-change: transform;
 	}
 
@@ -409,8 +377,6 @@
 	.split-text-sentinel {
 		height: 0;
 	}
-
-	/* ---- Responsive: stack on mobile ---- */
 
 	@media (max-width: 768px) {
 		.split-body {
