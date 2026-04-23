@@ -220,12 +220,12 @@
   }
 
   .tile-1 {
-    width: 50%;
+    width: 54%;
     aspect-ratio: 5 / 4;
   }
 
   .tile-2 {
-    width: 53%;
+    width: 52%;
     aspect-ratio: 1 / 1;
     flex-shrink: 0;
   }
@@ -241,7 +241,7 @@
   }
 
   .tile-3 {
-    width: 98%;
+    width: 95%;
     aspect-ratio: 1 / 1;
     margin: 0;
   }
