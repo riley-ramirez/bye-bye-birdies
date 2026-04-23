@@ -18,6 +18,7 @@
 	export let vhPerStep: number | string | undefined = 110;
 	export let fadeMs: number | string | undefined = 500;
 	export let header: string | undefined;
+	export let subtext: string | undefined;
 	export let videoTopPx: number | string | undefined = 0;
 
 	// ---- Derived ----
@@ -56,7 +57,6 @@
 
 		await tick();
 
-		// Only play if section is actually in the viewport
 		const inView = sectionEl
 			? sectionEl.getBoundingClientRect().bottom > 0 &&
 			  sectionEl.getBoundingClientRect().top < window.innerHeight
@@ -92,8 +92,8 @@
 			slideDistancePx = vh - rect.top;
 		}
 
-		const triggerBottom = vh * 1;
-		const triggerTop = videoBox.top > 0 ? videoBox.top : videoTop;
+		const triggerBottom = vh;
+		const triggerTop = videoTop + 150;
 
 		let newActive = 0;
 		const newProgress = resolvedSteps.map((_, i) => {
@@ -120,8 +120,8 @@
 		for (let i = 0; i < newProgress.length - 1; i++) {
 			const el = layerEls[i];
 			if (!el) continue;
-			const coveredByAbove = newProgress.slice(i + 1).some(p => p === 0);
-			el.style.visibility = coveredByAbove ? 'hidden' : 'visible';
+			const coveredByNext = newProgress[i + 1] === 0;
+			el.style.visibility = coveredByNext ? 'hidden' : 'visible';
 		}
 
 		if (newActive !== bgIndex) showStep(newActive);
@@ -150,7 +150,7 @@
 		const cardTop = lastCard.getBoundingClientRect().top + window.scrollY;
 
 		const currentSectionHeight = sectionEl.offsetHeight;
-		const neededSectionHeight = (cardTop - sectionTop) + window.innerHeight - (2 * videoTop);
+		const neededSectionHeight = (cardTop - sectionTop) + window.innerHeight - (2 * videoTop) + (slideDistancePx * 0.15);
 		const sentinelHeight = Math.max(0, neededSectionHeight - currentSectionHeight + sentinelEl.offsetHeight);
 
 		sentinelEl.style.height = sentinelHeight + 'px';
@@ -233,37 +233,33 @@
 		style="--fade-ms:{fadeDurationMs}ms; --video-top:{videoTop}px;"
 	>
 		<div class="split-body">
-			<div class="split-text">
-				{#each resolvedSteps as step, i (i)}
-					<ScrollySplitStep
-						{step}
-						{stepHeightVh}
-						active={i === bgIndex}
-						bind:textBoxEl={textBoxEls[i]}
-					/>
-				{/each}
-				<div class="split-text-sentinel" bind:this={sentinelEl} aria-hidden="true"></div>
+
+			<!-- Left: sticky header + subtext -->
+			<div class="split-header-col">
+				{#if header}
+					<h2 class="split-header">{header}</h2>
+				{/if}
+				{#if subtext}
+					<p class="split-subtext">{subtext}</p>
+				{/if}
 			</div>
 
+			<!-- Center: sticky video -->
 			<div class="split-video-col">
-				<div class="split-video-group">
-					{#if header}
-						<h2 class="split-video-header">{header}</h2>
-					{/if}
-					<div class="split-video-inner" bind:this={videoInnerEl}>
+				<div class="split-video-inner" bind:this={videoInnerEl}>
 					{#each resolvedSteps as step, i (i)}
 						{@const m = toMedia(step)}
 						<div
 							class="video-layer"
 							bind:this={layerEls[i]}
-							style="position: fixed; 
-							top: {videoBox.top}px; 
-							left: {videoBox.left}px; 
-							width: {videoBox.width}px; 
-							height: {videoBox.height}px; 
-							transform: translateY({(videoProgress[i] ?? (i === 0 ? 0 : 1)) * slideDistancePx}px); 
-							z-index: {i + 1}; overflow: hidden; display: {videoBox.width === 0 ? 'none' : 'block'}; 
-							border: 15px solid #fff; 
+							style="position: fixed;
+							top: {videoBox.top}px;
+							left: {videoBox.left}px;
+							width: {videoBox.width}px;
+							height: {videoBox.height}px;
+							transform: translateY({(videoProgress[i] ?? (i === 0 ? 0 : 1)) * slideDistancePx}px);
+							z-index: {i + 1}; overflow: hidden; display: {videoBox.width === 0 ? 'none' : 'block'};
+							border: 15px solid #fff;
 							box-sizing: border-box;"
 						>
 							{#if loadedIndices.has(i)}
@@ -286,9 +282,22 @@
 							{/if}
 						</div>
 					{/each}
-					</div>
 				</div>
 			</div>
+
+			<!-- Right: scrolly text steps -->
+			<div class="split-text">
+				{#each resolvedSteps as step, i (i)}
+					<ScrollySplitStep
+						{step}
+						{stepHeightVh}
+						active={i === bgIndex}
+						bind:textBoxEl={textBoxEls[i]}
+					/>
+				{/each}
+				<div class="split-text-sentinel" bind:this={sentinelEl} aria-hidden="true"></div>
+			</div>
+
 		</div>
 	</section>
 {/if}
@@ -296,61 +305,72 @@
 <style>
 	.scrolly-split {
 		position: relative;
-		margin-top: 10rem;
-		margin-bottom: 10rem;
+		margin-top: 7rem;
+		margin-bottom: 5rem;
 	}
 
-	.split-video-header {
-		margin: 0 0 1rem 0;
-		font-size: 2rem;
-		font-family: Azeret Mono, monospace;
-		font-weight: 600;
-		padding: 0 2.5rem 0 0;
-		text-align: left;
-	}
-
+	/* Equal outer columns so the center video column is truly centered */
 	.split-body {
 		display: grid;
-		grid-template-columns: 410px 1fr;
-		gap: 1rem;
+		grid-template-columns: 1fr auto 1.4fr;
+		gap: 0;
 		align-items: start;
+		padding: 0 6rem;
+		box-sizing: border-box;
 	}
 
-	.split-text {
-		position: relative;
+	/* ---- Left: sticky header col ---- */
+	.split-header-col {
+		position: sticky;
+		top: var(--video-top);
+		align-self: start;
+		height: calc(100vh - var(--video-top));
+		padding: 0rem 2rem 3rem 0;
+		box-sizing: border-box;
+		display: flex;
+		flex-direction: column;
+		justify-content: flex-start;
+		gap: 1rem;
 		z-index: 2;
-		pointer-events: none;
-		margin-left: 1rem;
+		max-width: 280px;
 	}
 
-	.split-text :global(.step-card) {
-		pointer-events: auto;
+	.split-header {
+		margin-top: 4.5rem;
+		margin-bottom: 0;
+		font-size: 1.75rem;
+		font-weight: 400;
+		line-height: 1.15;
+		font-family: Azeret Mono, monospace;
+		text-align: right;
 	}
 
+	.split-subtext {
+		margin: 0;
+		font-size: 0.95rem;
+		line-height: 1.25;
+		font-family: Azeret Mono, monospace;
+		text-align: right;
+	}
+
+	/* ---- Center: sticky video col ---- */
 	.split-video-col {
 		position: sticky;
 		top: var(--video-top);
 		align-self: start;
 		height: calc(100vh - var(--video-top));
-		padding: 0rem 2rem 3rem 1rem;
+		padding: 2rem 0 4rem 0;
 		box-sizing: border-box;
 		z-index: 1;
 		display: flex;
-		flex-direction: column;
 		align-items: flex-start;
-	}
-
-	.split-video-group {
-		display: flex;
-		flex-direction: column;
-		align-items: flex-start;
-		width: 100%;
+		justify-content: center;
 	}
 
 	.split-video-inner {
 		position: relative;
-		height: calc(100vh - var(--video-top) - 7rem);
-		width: calc((100vh - var(--video-top) - 7rem) * (12 / 9));
+		height: calc(100vh - var(--video-top) - 8rem);
+		width: calc((100vh - var(--video-top) - 8rem) * (10 / 9));
 		max-width: 100%;
 		overflow: hidden;
 		box-shadow: 10px 15px 32px rgba(0,0,0,0.18);
@@ -374,13 +394,38 @@
 		background-position: center;
 	}
 
+	/* ---- Right: scrolly text col ---- */
+	.split-text {
+		position: relative;
+		z-index: 2;
+		pointer-events: none;
+		padding-left: 1rem;
+		padding-right: 0;
+		padding-top: 3rem;
+		max-width: 475px;
+	}
+
+	.split-text :global(.step-card) {
+		pointer-events: auto;
+	}
+
 	.split-text-sentinel {
 		height: 0;
 	}
 
+	/* ---- Mobile ---- */
 	@media (max-width: 768px) {
 		.split-body {
 			grid-template-columns: 1fr;
+			padding: 0 1.5rem;
+		}
+
+		.split-header-col {
+			position: relative;
+			top: 0;
+			height: auto;
+			padding: 0 0 1rem 0;
+			max-width: none;
 		}
 
 		.split-video-col {
@@ -391,13 +436,14 @@
 		}
 
 		.split-video-inner {
-			aspect-ratio: 12 / 9;
+			aspect-ratio: 10 / 9;
 			width: 100%;
-			max-height: none;
+			height: auto;
 		}
 
 		.split-text {
 			padding: 0;
+			max-width: none;
 		}
 	}
 </style>

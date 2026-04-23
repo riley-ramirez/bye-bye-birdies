@@ -106,6 +106,15 @@
     : 0;
   $: totalScrollHeight = scrubScrollHeight + overlayScrollHeight;
 
+   // Snap target positions: one per overlay panel, offset from the top of .scrolly.
+  // Each panel's leading edge in overlayProgress space maps back to an absolute
+  // scroll position by reversing the overlayStartPx calculation.
+  $: snapPositions = (() => {
+    const scrubEnd = scrubScrollHeight - (typeof window !== 'undefined' ? window.innerHeight : 800);
+    const overlayStartPx = scrubEnd - PX_PER_SECOND;
+    return overlayContent.map(item => overlayStartPx + item.start);
+  })();
+
   // Reactive array of per-panel styles — re-derives whenever overlayProgress changes.
   function calcPanelStyle(item: typeof overlayContent[0], p: number, isLast: boolean): string {
     if (p < item.start) {
@@ -114,6 +123,11 @@
     // Last panel never fades out — stays visible until the scroll container ends
     if (!isLast && p > item.end) {
       return 'opacity: 0; transform: translateY(0); pointer-events: none;';
+    }
+
+     // Last panel: once fully faded in, lock it fully visible forever
+    if (isLast && p >= item.start + FADE_PX) {
+      return 'opacity: 1; transform: translateY(0);';
     }
 
     let opacity: number;
@@ -305,7 +319,6 @@
     observer.observe(sticky);
 
     window.addEventListener('scroll', scrub, { passive: true });
-    window.addEventListener('resize', scrub, { passive: true });
 
     cleanup = () => {
       clearTimeout(indicatorTimer);
@@ -392,6 +405,7 @@
                     src={gifSrcs[i] ?? item.imgSrc}
                     alt=""
                     class="overlay-image {item.imgClass ?? ''}"
+                    loading="lazy"
                   />
                   <p class="sub-caption">{item.subCaption}</p>
                 </div>
@@ -400,6 +414,7 @@
                   src={gifSrcs[i] ?? item.imgSrc}
                   alt=""
                   class="overlay-image {item.imgClass ?? ''}"
+                  loading="lazy"
                 />
               {/if}
             {/if}
@@ -410,6 +425,10 @@
         {/each}
       </div>
     {/if}
+
+    {#each snapPositions as pos (pos)}
+      <div class="snap-target" style="top: {pos}px;"></div>
+    {/each}
 
   </div>
 </div>
@@ -423,6 +442,21 @@
     right: 50%;
     margin-left: -50%;
     margin-right: -50%;
+  }
+
+  /* Snap only applies in the overlay phase — proximity means the browser
+     only snaps when the user stops near a target, not on every scroll tick. */
+  :global(html) {
+    scroll-snap-type: y proximity;
+  }
+
+  .snap-target {
+    position: absolute;
+    left: 0;
+    width: 1px;
+    height: 1px;
+    scroll-snap-align: start;
+    pointer-events: none;
   }
 
   /* ── Sticky viewport panel ───────────────────────────────────────────── */

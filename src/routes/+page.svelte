@@ -31,7 +31,7 @@ This code is in +page.svelte and can be manually coded using HTML or Svelte tags
   <div class="row justify-content-center">
     <div class="col-12 col-sm-10 col-lg-8 col-xxl-6">
       <div class="d-flex align-items-center gap-3">
-        <img src="{base}/images/headshot-gray.png" alt="Riley Ramirez" style="width: 55px; height: 55px; border-radius: 50%; object-fit: cover;">
+        <img src="{base}/images/headshot-gray.png" alt="Riley Ramirez" style="width: 55px; height: 55px; border-radius: 50%; object-fit: cover;" loading="lazy">
         <p class="mb-0" style="line-height: 1.2;">
           <strong>By Riley Ramirez</strong><br> 
           <span style="font-size: 1.1rem; opacity: 0.6;">UC Berkeley Graduate School of Journalism</span>

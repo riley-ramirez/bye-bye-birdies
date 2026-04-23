@@ -72,7 +72,7 @@
 {#if shouldRender}
   {#if size === 'full'}
     <figure class="my-3 full-bleed">
-      <img src={finalSrc} alt={finalAlt} class="img-fluid border" loading="lazy" />
+      <img src={finalSrc} alt={finalAlt} class="img-fluid border" loading="lazy" style="margin-top: 3rem; margin-bottom: 3rem;"/>
       {#if caption}
         <figcaption class="mt-2 text-muted small">{caption}</figcaption>
       {/if}

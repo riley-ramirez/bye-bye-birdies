@@ -50,40 +50,40 @@
 
   <div class="collage-area" class:loaded bind:this={collage} aria-label="Bird illustration collage">
     <div class="cell c1">
-      <img src={p('/illustrations/thick-billed.png')} alt="Thick-billed Longspur" />
-      <img src={p('/illustrations/black-box.png')} alt="" class="frame" />
+      <img src={p('/illustrations/thick-billed.png')} alt="Thick-billed Longspur" loading="lazy" />
+      <img src={p('/illustrations/black-box.png')} alt="" class="frame" loading="lazy" />
     </div>
     <div class="cell c2">
-      <img src={p('/illustrations/chestnut.png')} alt="Chestnut-collared Longspur" />
-      <img src={p('/illustrations/black-box.png')} alt="" class="frame" />
+      <img src={p('/illustrations/chestnut.png')} alt="Chestnut-collared Longspur" loading="lazy" />
+      <img src={p('/illustrations/black-box.png')} alt="" class="frame" loading="lazy" />
     </div>
     <div class="cell c3">
-      <img src={p('/illustrations/horned_lark.png')} alt="Horned Lark" />
-      <img src={p('/illustrations/black-box.png')} alt="" class="frame" />
+      <img src={p('/illustrations/horned_lark.png')} alt="Horned Lark" loading="lazy" />
+      <img src={p('/illustrations/black-box.png')} alt="" class="frame" loading="lazy" />
     </div>
     <div class="cell c4">
-      <img src={p('/illustrations/grasshopper.png')} alt="Grasshopper Sparrow" />
-      <img src={p('/illustrations/black-box.png')} alt="" class="frame" />
+      <img src={p('/illustrations/grasshopper.png')} alt="Grasshopper Sparrow" loading="lazy" />
+      <img src={p('/illustrations/black-box.png')} alt="" class="frame" loading="lazy" />
     </div>
     <div class="cell c5">
-      <img src={p('/illustrations/bairds_sparrow.png')} alt="Baird's Sparrow" />
-      <img src={p('/illustrations/black-box.png')} alt="" class="frame" />
+      <img src={p('/illustrations/bairds_sparrow.png')} alt="Baird's Sparrow" loading="lazy" />
+      <img src={p('/illustrations/black-box.png')} alt="" class="frame" loading="lazy" />
     </div>
     <div class="cell c6">
-      <img src={p('/illustrations/savannah.png')} alt="Savannah Sparrow" />
-      <img src={p('/illustrations/black-box.png')} alt="" class="frame" />
+      <img src={p('/illustrations/savannah.png')} alt="Savannah Sparrow" loading="lazy" />
+      <img src={p('/illustrations/black-box.png')} alt="" class="frame" loading="lazy" />
     </div>
     <div class="cell c7">
-      <img src={p('/illustrations/lark_bunting.png')} alt="Lark Bunting" />
-      <img src={p('/illustrations/black-box.png')} alt="" class="frame" />
+      <img src={p('/illustrations/lark_bunting.png')} alt="Lark Bunting" loading="lazy" />
+      <img src={p('/illustrations/black-box.png')} alt="" class="frame" loading="lazy" />
     </div>
     <div class="cell c8">
-      <img src={p('/illustrations/mountain_plover.png')} alt="Mountain Plover" />
-      <img src={p('/illustrations/black-box.png')} alt="" class="frame" />
+      <img src={p('/illustrations/mountain_plover.png')} alt="Mountain Plover" loading="lazy"  />
+      <img src={p('/illustrations/black-box.png')} alt="" class="frame" loading="lazy" />
     </div>
     <div class="cell c9">
-      <img src={p('/illustrations/spragues.png')} alt="Sprague's Pipit" />
-      <img src={p('/illustrations/black-box.png')} alt="" class="frame" />
+      <img src={p('/illustrations/spragues.png')} alt="Sprague's Pipit" loading="lazy" />
+      <img src={p('/illustrations/black-box.png')} alt="" class="frame" loading="lazy" />
     </div>
   </div>
 
@@ -104,16 +104,16 @@
 <!-- Mobile bird row — hidden on desktop -->
 <div class="mobile-birds">
   <div class="mobile-cell">
-    <img src={p('/illustrations/horned_lark.png')} alt="Horned Lark" />
-    <img src={p('/illustrations/black-box.png')} alt="" class="mobile-frame" />
+    <img src={p('/illustrations/horned_lark.png')} alt="Horned Lark" loading="lazy" />
+    <img src={p('/illustrations/black-box.png')} alt="" class="mobile-frame" loading="lazy" />
   </div>
   <div class="mobile-cell">
-    <img src={p('/illustrations/chestnut.png')} alt="Chestnut-collared Longspur" />
-    <img src={p('/illustrations/black-box.png')} alt="" class="mobile-frame" />
+    <img src={p('/illustrations/chestnut.png')} alt="Chestnut-collared Longspur" loading="lazy" />
+    <img src={p('/illustrations/black-box.png')} alt="" class="mobile-frame" loading="lazy" />
   </div>
   <div class="mobile-cell">
-    <img src={p('/illustrations/bairds_sparrow.png')} alt="Baird's Sparrow" />
-    <img src={p('/illustrations/black-box.png')} alt="" class="mobile-frame" />
+    <img src={p('/illustrations/bairds_sparrow.png')} alt="Baird's Sparrow" loading="lazy" />
+    <img src={p('/illustrations/black-box.png')} alt="" class="mobile-frame" loading="lazy" />
   </div>
 </div>
 

@@ -34,23 +34,42 @@
 
 <style>
 	.step-spacer {
-		display: flex;
-		flex-direction: column;
-		justify-content: flex-end;
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-end;
+	}
+
+	/* First step: card sits at the top so it's visible on arrival */
+	.step-spacer:first-child {
+		justify-content: flex-start;
+		margin-top: 6rem;
 	}
 
 
 	.step-card {
 		padding: 1.5rem;
-        margin-left: 2rem;
-        margin-right: auto;
+		margin-left: auto;
+		margin-right: 0;
+		margin-top: 4rem; /* pushes card below video top edge */
 	}
 
 	.step-body {
-		font-size: 1rem;
-		line-height: 1.65;
+		font-size: 0.90rem;
+		line-height: 1.25;
 		color: black;
-        font-family: Azeret Mono, monospace;
+		font-family: Azeret Mono, monospace;
+	}
+
+	/* Force all headings inside step content to use the same font */
+	.step-body :global(h1),
+	.step-body :global(h2),
+	.step-body :global(h3),
+	.step-body :global(h4),
+	.step-body :global(h5),
+	.step-body :global(h6) {
+		font-family: Azeret Mono, monospace;
+		font-weight: 600;
+		margin-bottom: 1.5rem;
 	}
 
 	.step-body :global(p:last-child) {
