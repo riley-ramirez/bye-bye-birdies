@@ -62,22 +62,6 @@
   <div class="collage-inner" style="width: {width}">
 
     {#if isVisible}
-      <!--
-        Strategy: one CSS grid, many rows of height = --gap.
-        Tile 1 spans from row 1.
-        Tile 2 starts partway down by starting at a later row.
-        Tile 3 goes below tile 1.
-        All gaps between tiles are exactly --gap.
-
-        Columns: [48fr] [10px gap implicit] [52fr]
-        We use grid-template-columns and let grid handle the gutter.
-
-        Rows: we define many small rows so we can start tile 2 mid-way.
-        Tile 1 is 5:4. At 48% width of collage-inner, its height ≈ 38.4% of collage-inner width.
-        We want tile 2 to start ~30% down tile 1 = ~0.3 * 38.4% ≈ 11.5% of collage-inner width.
-
-        We use a simple approach: a top spacer div in the right column sized with aspect-ratio.
-      -->
       <div class="grid">
 
         <!-- Left column: tile 1 + tile 3 stacked, gap always exactly --gap -->
@@ -105,11 +89,9 @@
           </div>
         </div>
 
-        <!-- Right column: spacer + caption + tile 2 -->
+        <!-- Right column: spacer + tile 2 + caption -->
         <div class="right-col">
           <div class="tile-2-spacer"></div>
-          <!-- eslint-disable-next-line svelte/no-at-html-tags -->
-          <p class="caption">{@html caption}</p>
           <div class="tile tile-2">
             {#if tiles[1]?.type === 'video'}
               <video src={tiles[1].src} aria-label={tiles[1].alt} autoplay muted loop playsinline>
@@ -119,6 +101,8 @@
               <img src={tiles[1]?.src ?? ''} alt={tiles[1]?.alt ?? ''} />
             {/if}
           </div>
+          <!-- eslint-disable-next-line svelte/no-at-html-tags -->
+          <p class="caption">{@html caption}</p>
         </div>
 
       </div>
@@ -133,8 +117,8 @@
         </div>
         <div class="right-col">
           <div class="tile-2-spacer"></div>
-          <div class="placeholder-caption"></div>
           <div class="tile tile-2 placeholder-tile"></div>
+          <div class="placeholder-caption"></div>
         </div>
       </div>
     {/if}
@@ -200,7 +184,7 @@
     flex-shrink: 0;
   }
 
-  /* Right column: spacer + caption + tile 2 */
+  /* Right column: spacer + tile 2 + caption */
   .right-col {
     flex: 1;
     min-width: 0;
@@ -217,18 +201,8 @@
    */
   .tile-2-spacer {
     width: 100%;
-    padding-top: 25%;
+    padding-top: 35%;
     flex-shrink: 0;
-  }
-
-  .caption {
-    margin: 0 0 0.75rem 0;
-    padding: 0;
-    width: 100%;
-    font-size: 0.85rem;
-    font-family: Azeret Mono, monospace;
-    line-height: 1.6;
-    text-align: left;
   }
 
   .tile-2 {
@@ -237,6 +211,15 @@
     flex-shrink: 0;
   }
 
+  .caption {
+    margin: 1rem 0 0 5rem;
+    padding-left: 1.5rem;
+    width: 100%;
+    font-size: 0.85rem;
+    font-family: Azeret Mono, monospace;
+    line-height: 1.6;
+    text-align: left;
+  }
 
   /* ── Shared tile styles ── */
   .tile {
