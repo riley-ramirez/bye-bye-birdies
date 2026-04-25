@@ -1,688 +1,919 @@
+<!--
+  AnimationsCleaner — a scroll-driven storytelling component.
+
+  Two phases as the user scrolls down:
+    1. SCRUB — the video plays forward frame-by-frame, locked to scroll position.
+       Scrolling back up rewinds it.
+    2. PANELS — full-screen sections appear one at a time. CSS scroll-snap
+       pins each one to the viewport so the user moves through them cleanly.
+
+  See scroll-snap-bug-findings.md for the full "why this is built this way"
+  story (snap targets, sticky runways, mandatory-vs-proximity snap, etc).
+-->
 <script lang="ts">
-  import { base } from '$app/paths';
-  import { onMount } from 'svelte';
+	import { base } from '$app/paths';
+	import { onMount } from 'svelte';
 
-  export let src: string = '';
-  export let bodyText: string = '';
-  export let scrubStart: number = 4;
-  export let mobileSrc: string = '';
-  export let mobileBreakpoint: number = 768;
-  export let captions: {
-    start: number;
-    end: number;
-    text: string;
-    class?: string;
-    persist?: boolean;
-  }[] = [];
+	// `src` and `bodyText` are alternative ways to configure this component:
+	//   - `src` + `captions` + `overlayContent` = pass everything as props
+	//   - `bodyText` = a JSON blob from the CMS containing all of the above
+	// When bodyText is provided, the reactive block below parses it.
+	export let src: string = '';
+	export let bodyText: string = '';
+	// How many seconds of video play before the scroll-driven scrub takes over.
+	// Below this point, the video plays normally; past it, scrolling drives time.
+	export let scrubStart: number = 4;
+	export let mobileSrc: string = '';
+	export let mobileBreakpoint: number = 768;
+	export let captions: {
+		start: number;
+		end: number;
+		text: string;
+		class?: string;
+		persist?: boolean;
+	}[] = [];
 
-  /**
-   * overlayContent: items that scroll over the frozen video after scrubbing ends.
-   * start/end are in pixels of overlay scroll progress — same idea as caption
-   * start/end being in video seconds. Each panel is visible between start and end,
-   * with a short fade-in at the start edge and fade-out at the end edge.
-   *
-   * Example:
-   *   { start: 0,   end: 800,  imgSrc: "...", text: "..." }
-   *   { start: 700, end: 1500, imgSrc: "...", text: "..." }
-   *   { start: 1400, end: 2200, imgSrc: "...", text: "..." }
-   *
-   * Overlap the ranges slightly (e.g. 100px) so panels cross-fade rather than
-   * leaving a gap between them.
-   */
-  export let overlayContent: {
-    start: number;
-    end: number;
-    text?: string;
-    class?: string;
-    textClass?: string;
-    imgSrc?: string;
-    imgClass?: string;
-    subCaption?: string;
-  }[] = [];
+	// start/end are accepted for backwards compatibility with existing CMS data
+	// but no longer drive layout — the first item fades in over the video,
+	// each subsequent item is its own scroll-snap section.
+	export let overlayContent: {
+		start?: number;
+		end?: number;
+		text?: string;
+		class?: string;
+		textClass?: string;
+		imgSrc?: string;
+		imgClass?: string;
+		subCaption?: string;
+	}[] = [];
 
-  $: if (!src && bodyText) {
-    try {
-      const parsed = JSON.parse(bodyText);
-      src = base + '/' + (parsed.img ?? '');
-      mobileSrc = parsed.mobileSrc ? base + '/' + parsed.mobileSrc : '';
-      captions = (parsed.captions ?? []).map((c: typeof captions[0]) => ({
-        ...c,
-        text: decodeEntities(c.text)
-      }));
-      overlayContent = (parsed.overlayContent ?? []).map((c: typeof overlayContent[0]) => ({
-        ...c,
-        text: c.text ? decodeEntities(c.text) : c.text
-      }));
-    } catch (e) {
-      console.error('Animations: could not parse bodyText', e);
-    }
-  }
+	// Reactive block (the `$:` prefix) — runs whenever `src` or `bodyText` change.
+	// If src wasn't passed directly but bodyText was, we parse the CMS JSON here
+	// and split it into the same fields you'd otherwise pass as props.
+	$: if (!src && bodyText) {
+		try {
+			const parsed = JSON.parse(bodyText);
+			src = base + '/' + (parsed.img ?? '');
+			mobileSrc = parsed.mobileSrc ? base + '/' + parsed.mobileSrc : '';
+			captions = (parsed.captions ?? []).map((c: (typeof captions)[0]) => ({
+				...c,
+				text: decodeEntities(c.text)
+			}));
+			overlayContent = (parsed.overlayContent ?? []).map((c: (typeof overlayContent)[0]) => ({
+				...c,
+				text: c.text ? decodeEntities(c.text) : c.text
+			}));
+		} catch (e) {
+			console.error('Animations: could not parse bodyText', e);
+		}
+	}
 
-  // Decode HTML entities (e.g. &mdash; → —) that may come through from the CMS
-  function decodeEntities(str: string): string {
-    return str
-      .replace(/&mdash;/g, '—')
-      .replace(/&ndash;/g, '–')
-      .replace(/&amp;/g, '&')
-      .replace(/&lt;/g, '<')
-      .replace(/&gt;/g, '>')
-      .replace(/&quot;/g, '"')
-      .replace(/&#39;/g, "'")
-      .replace(/&nbsp;/g, ' ');
-  }
+	function decodeEntities(str: string): string {
+		return str
+			.replace(/&mdash;/g, '—')
+			.replace(/&ndash;/g, '–')
+			.replace(/&amp;/g, '&')
+			.replace(/&lt;/g, '<')
+			.replace(/&gt;/g, '>')
+			.replace(/&quot;/g, '"')
+			.replace(/&#39;/g, "'")
+			.replace(/&nbsp;/g, ' ');
+	}
 
-  const PX_PER_SECOND = 900;
-  let container: HTMLDivElement;
-  let sticky: HTMLDivElement;
-  let video: HTMLVideoElement;
-  let duration = 0;
-  let scrubScrollHeight = 5000;
-  let isScrubbing = false;
-  let showScrollIndicator = false;
-  let indicatorTimer: ReturnType<typeof setTimeout>;
-  let currentTime = 0;
-  let persistedCaption: typeof captions[0] | null = null;
-  // eslint-disable-next-line no-useless-assignment
-  let displayCaption: typeof captions[0] | null = null;
-  let fadingCaption: typeof captions[0] | null = null;
-  let fadeTimer: ReturnType<typeof setTimeout>;
-  let prevDisplay: typeof captions[0] | null = null;
+	// How many pixels of scrolling correspond to one second of video.
+	// Bigger = the user has to scroll more to advance the same amount of video
+	// (slower, more deliberate); smaller = the video scrubs faster.
+	const PX_PER_SECOND = 900;
+	// The first overlay item fades in over the video across the last
+	// FIRST_OVERLAY_FADE_RANGE px of scrub, completing exactly at scrub end.
+	// Bigger range = a more gradual fade; smaller = a punchier appearance.
+	const FIRST_OVERLAY_FADE_RANGE = 900;
 
-  // How many px past the end of the scrub phase the user has scrolled
-  let overlayProgress = 0;
+	// `bind:this={...}` (further down in the markup) sets these to the actual
+	// DOM nodes once they're rendered — letting us measure their position,
+	// attach observers, etc.
+	let scrubber: HTMLDivElement;
+	let sticky: HTMLDivElement;
+	let video: HTMLVideoElement;
 
-  // px over which each panel fades in at its start edge and fades out at its end edge
-  const FADE_PX = 150;
+	// `duration` and `scrubScrollHeight` get their real values once the video
+	// metadata loads (in setupVideo). Until then 5000 is a safe placeholder.
+	let duration = 0;
+	let scrubScrollHeight = 5000;
+	let isScrubbing = false;
+	let showScrollIndicator = false;
+	let indicatorTimer: ReturnType<typeof setTimeout>;
+	// Current playback time of the video. We track it ourselves (rather than
+	// reading video.currentTime live) because reading it triggers paint work.
+	let currentTime = 0;
 
-  let overlayPanelHeight = typeof window !== 'undefined' ? window.innerHeight : 800;
+	// Caption state. We track three captions because of the "persist" feature:
+	// a caption with persist:true keeps showing past its end timestamp until
+	// another caption supersedes it, or until the user scrolls back before it.
+	let persistedCaption: (typeof captions)[0] | null = null;
+	// eslint-disable-next-line no-useless-assignment
+	let displayCaption: (typeof captions)[0] | null = null;
+	let fadingCaption: (typeof captions)[0] | null = null;
+	let fadeTimer: ReturnType<typeof setTimeout>;
+	let prevDisplay: (typeof captions)[0] | null = null;
 
-  // Total overlay scroll height:
-  // last panel's end + a hold period (one viewport) so it sticks before page moves on
-  $: lastEnd = overlayContent.length > 0
-    ? Math.max(...overlayContent.map(c => c.end))
-    : 0;
-  $: overlayScrollHeight = overlayContent.length > 0
-    ? lastEnd + overlayPanelHeight
-    : 0;
-  $: totalScrollHeight = scrubScrollHeight + overlayScrollHeight;
+	// First overlay (overlayContent[0]) — sits over the video and fades in
+	// based on scroll position. opacity 0 = invisible, 1 = fully covering video.
+	let firstOverlayOpacity = 0;
+	let firstOverlayImgSrc = '';
+	let firstOverlayWasActive = false;
 
-   // Snap target positions: one per overlay panel, offset from the top of .scrolly.
-  // Each panel's leading edge in overlayProgress space maps back to an absolute
-  // scroll position by reversing the overlayStartPx calculation.
-  $: snapPositions = (() => {
-    const scrubEnd = scrubScrollHeight - (typeof window !== 'undefined' ? window.innerHeight : 800);
-    const overlayStartPx = scrubEnd - PX_PER_SECOND;
-    return overlayContent.map(item => overlayStartPx + item.start);
-  })();
+	// Scroll-snap sections (overlayContent.slice(1)) — real DOM sections that
+	// each take a full viewport. The user scrolls through them one by one.
+	let sectionRefs: HTMLElement[] = [];
+	let visibleSections: boolean[] = [];
+	let gifSrcs: string[] = [];
+	// `inOverlayPhase` controls when mandatory scroll-snap is on. See scrub().
+	let inOverlayPhase = false;
+	let sectionObserver: IntersectionObserver | null = null;
+	// Tracks the user's previous scroll position so we can detect the EXACT
+	// frame they cross from scrub → panels (and only fire side-effects once).
+	let lastScrolledPx = 0;
 
-  // Reactive array of per-panel styles — re-derives whenever overlayProgress changes.
-  function calcPanelStyle(item: typeof overlayContent[0], p: number, isLast: boolean): string {
-    if (p < item.start) {
-      return 'opacity: 0; transform: translateY(30px); pointer-events: none;';
-    }
-    // Last panel never fades out — stays visible until the scroll container ends
-    if (!isLast && p > item.end) {
-      return 'opacity: 0; transform: translateY(0); pointer-events: none;';
-    }
+	$: sections = overlayContent.slice(1);
 
-     // Last panel: once fully faded in, lock it fully visible forever
-    if (isLast && p >= item.start + FADE_PX) {
-      return 'opacity: 1; transform: translateY(0);';
-    }
+	$: if (visibleSections.length !== sections.length) {
+		visibleSections = new Array(sections.length).fill(false);
+	}
 
-    let opacity: number;
-    let translateY = 0;
-    const fromStart = p - item.start;
-    const fromEnd   = item.end - p;
+	$: if (sections.length && gifSrcs.length !== sections.length) {
+		gifSrcs = sections.map((item) => (item.imgSrc?.endsWith('.gif') ? '' : (item.imgSrc ?? '')));
+	}
 
-    if (fromStart < FADE_PX) {
-      // Fade in + slide up on entry
-      opacity    = fromStart / FADE_PX;
-      translateY = 30 * (1 - fromStart / FADE_PX);
-    } else if (!isLast && fromEnd < FADE_PX) {
-      // Fade out on exit (skipped for last panel)
-      opacity = fromEnd / FADE_PX;
-    } else {
-      opacity = 1;
-    }
+	// Default the first overlay's image src (non-GIFs only — GIFs are loaded
+	// on activation so they play from the first frame).
+	$: if (
+		overlayContent[0]?.imgSrc &&
+		!overlayContent[0].imgSrc.endsWith('.gif') &&
+		!firstOverlayImgSrc
+	) {
+		firstOverlayImgSrc = overlayContent[0].imgSrc;
+	}
 
-    return `opacity: ${opacity}; transform: translateY(${translateY}px);`;
-  }
+	// Restart the first overlay's GIF the moment the panel begins fading in.
+	$: {
+		const isActive = firstOverlayOpacity > 0.02;
+		if (isActive && !firstOverlayWasActive) {
+			const item = overlayContent[0];
+			if (item?.imgSrc?.endsWith('.gif')) {
+				firstOverlayImgSrc = '';
+				requestAnimationFrame(() => {
+					firstOverlayImgSrc = item.imgSrc ?? '';
+				});
+			}
+		}
+		// eslint-disable-next-line no-useless-assignment
+		firstOverlayWasActive = isActive;
+	}
 
-  // Re-runs whenever overlayProgress or overlayContent changes
-  $: panelStyles = overlayContent.map((item, i) =>
-    calcPanelStyle(item, overlayProgress, i === overlayContent.length - 1)
-  );
+	// Pick which caption (if any) to show right now, based on currentTime.
+	// Three buckets:
+	//   - `found`: a caption whose start/end currently surrounds currentTime
+	//   - `pastPersisted`: a "persist" caption whose end is behind us — we keep
+	//     showing it until something else takes over
+	//   - `beforePersisted`: a "persist" caption that hasn't started yet — clear
+	//     any persisted caption (the user scrolled back before it started)
+	$: {
+		const found = captions.find((c) => currentTime >= c.start && currentTime <= c.end) ?? null;
+		const pastPersisted = captions.find((c) => c.persist && currentTime > c.end) ?? null;
+		const beforePersisted = captions.find((c) => c.persist && currentTime < c.start) ?? null;
 
-  let gifSrcs: string[] = [];
+		if (beforePersisted) {
+			persistedCaption = null;
+		} else if (pastPersisted) {
+			persistedCaption = pastPersisted;
+		}
 
-  $: if (overlayContent.length && !gifSrcs.length) {
-    gifSrcs = overlayContent.map(item =>
-      item.imgSrc?.endsWith('.gif') ? '' : (item.imgSrc ?? '')
-    );
-  }
+		displayCaption = found ?? persistedCaption;
+	}
 
-  $: {
-    overlayContent.forEach((item, i) => {
-      if (item.imgSrc && overlayProgress >= item.start - 10 && overlayProgress < item.start + FADE_PX) {
-        if (gifSrcs[i] !== item.imgSrc) {
-          gifSrcs[i] = '';
-          requestAnimationFrame(() => {
-            gifSrcs[i] = item.imgSrc ?? '';
-            gifSrcs = [...gifSrcs]; // trigger reactivity
-          });
-        }
-      }
-    });
-  }
+	$: handleFade(displayCaption);
 
-  $: {
-    const found = captions.find(c => currentTime >= c.start && currentTime <= c.end) ?? null;
-    const pastPersisted = captions.find(c => c.persist && currentTime > c.end) ?? null;
-    const beforePersisted = captions.find(c => c.persist && currentTime < c.start) ?? null;
+	// scrub() is the heart of the component. It runs on every scroll event
+	// and does four jobs in order:
+	//   1. Decide whether mandatory snap should be on (inOverlayPhase)
+	//   2. Update the first overlay's opacity based on scroll position
+	//   3. Detect the "leaving the scrub" moment and smooth-scroll into panels
+	//   4. If still in the scrub phase, seek the video to the right time
+	function scrub() {
+		if (!video || !duration || !scrubber) return;
 
-    if (beforePersisted) {
-      persistedCaption = null;
-    } else if (pastPersisted) {
-      persistedCaption = pastPersisted;
-    }
+		// `getBoundingClientRect().top` is the distance from the viewport's
+		// top edge to the element's top edge. As the user scrolls down, the
+		// scrubber's top moves up and out of view, so `top` becomes negative.
+		// Negating it gives us "how many px of the scrubber have scrolled past
+		// the top of the viewport" — a positive, growing number.
+		const { top } = scrubber.getBoundingClientRect();
+		const scrolledPx = -top;
+		// `scrubEnd` is the scroll position at which the video finishes scrubbing.
+		// (The scrubber is taller than the video by 1 viewport — see setupVideo —
+		// because position:sticky needs that runway to unstick. So scrubEnd is
+		// the scrubber's height minus that runway.)
+		const scrubEnd = scrubScrollHeight - window.innerHeight;
 
-    displayCaption = found ?? persistedCaption;
-  }
+		// Mandatory snap is active between scrub end and the last section being
+		// pinned to top. Outside this window the page scrolls freely — important,
+		// because mandatory snap during the scrub would fight the video seek,
+		// and after the last section it would trap the user (no more snap targets
+		// ahead, so the browser would yank them back).
+		const lastSection = sectionRefs[sectionRefs.length - 1];
+		const reachedLastSection = !!lastSection && lastSection.getBoundingClientRect().top <= 0;
+		inOverlayPhase = scrolledPx > scrubEnd && !reachedLastSection;
 
-  $: handleFade(displayCaption);
+		// Drive the first overlay's fade-in across the last FIRST_OVERLAY_FADE_RANGE
+		// px of scrub. Opacity hits 1 exactly at scrub end so the panel is fully
+		// visible over the final video frame. Math.min/Math.max clamps the result
+		// between 0 and 1 (anywhere outside the fade range falls back to 0 or 1).
+		if (overlayContent[0]) {
+			const fadeStart = scrubEnd - FIRST_OVERLAY_FADE_RANGE;
+			firstOverlayOpacity = Math.min(
+				Math.max((scrolledPx - fadeStart) / FIRST_OVERLAY_FADE_RANGE, 0),
+				1
+			);
+		}
 
-  function scrub() {
-    if (!video || !duration || !container) return;
+		// When the user crosses out of the scrub phase, smooth-scroll into the
+		// first scroll-snap section. Browsers don't retroactively snap when
+		// scroll-snap-type flips to mandatory mid-gesture — without this nudge
+		// the user has to scroll a few extra times before snap engages.
+		// Comparing `lastScrolledPx` (previous frame) to `scrolledPx` (current)
+		// lets us detect the EXACT frame of crossing, so we only fire once.
+		const forwardCrossing = scrolledPx > scrubEnd && lastScrolledPx <= scrubEnd;
+		if (forwardCrossing && sectionRefs[0]) {
+			sectionRefs[0].scrollIntoView({ behavior: 'smooth', block: 'start' });
+		}
+		lastScrolledPx = scrolledPx;
 
-    const { top } = container.getBoundingClientRect();
-    const scrolledPx = -top;
-    const scrubEnd = scrubScrollHeight - window.innerHeight;
+		// Past scrub end? Done — no video seeking needed.
+		if (scrolledPx > scrubEnd) return;
+		// Not scrubbing yet? (Video is still in its intro play-through phase.)
+		if (!isScrubbing) return;
+		// `readyState < 2` means the video doesn't have enough data to seek yet.
+		if (video.readyState < 2) return;
 
-    // Overlay starts counting 1 video-second (PX_PER_SECOND px) before scrub ends
-    const overlayStartPx = scrubEnd - PX_PER_SECOND;
+		// Map scroll position → video time. progress goes 0..1 across the scrub.
+		const progress = Math.min(Math.max(scrolledPx / scrubEnd, 0), 1);
+		const targetTime = scrubStart + progress * (duration - scrubStart);
 
-    // ── Phase 1: scrub the video ──────────────────────────────────────────
-    if (scrolledPx <= scrubEnd) {
-      // Start overlayProgress early so panels begin appearing in the last second
-      overlayProgress = scrolledPx > overlayStartPx ? scrolledPx - overlayStartPx : 0;
+		// Only seek if `targetTime` is in a part of the video that's already
+		// downloaded. `video.buffered` is a list of (start, end) ranges
+		// representing what's been loaded. Seeking outside those ranges causes
+		// a jarring black flash while the browser fetches the data.
+		const buffered = video.buffered;
+		for (let i = 0; i < buffered.length; i++) {
+			if (targetTime >= buffered.start(i) && targetTime <= buffered.end(i)) {
+				video.currentTime = targetTime;
+				break;
+			}
+		}
+		currentTime = targetTime;
 
-      if (!isScrubbing) return;
-      if (video.readyState < 2) return;
+		// Hide the "Scroll to continue" hint once the user has clearly engaged.
+		if (progress > 0.05) showScrollIndicator = false;
+	}
 
-      const progress = Math.min(Math.max(scrolledPx / scrubEnd, 0), 1);
-      const targetTime = scrubStart + progress * (duration - scrubStart);
+	// Switch the video from "playing normally" to "scroll-driven scrubbing".
+	// We pause it, lock isScrubbing, and immediately call scrub() so the video
+	// frame matches the user's current scroll position.
+	function startScrubbing() {
+		video.pause();
+		isScrubbing = true;
+		showScrollIndicator = true;
+		clearTimeout(indicatorTimer);
+		scrub();
+	}
 
-      const buffered = video.buffered;
-      for (let i = 0; i < buffered.length; i++) {
-        if (targetTime >= buffered.start(i) && targetTime <= buffered.end(i)) {
-          video.currentTime = targetTime;
-          break;
-        }
-      }
-      currentTime = targetTime;
+	// On each new video frame, check whether playback has reached scrubStart.
+	// Once it has, switch from normal playback to scroll-driven scrubbing.
+	function checkScrubStart() {
+		currentTime = video.currentTime;
+		if (video.currentTime >= scrubStart) {
+			startScrubbing();
+		} else {
+			video.requestVideoFrameCallback(checkScrubStart);
+		}
+	}
 
-      if (progress > 0.05) showScrollIndicator = false;
-    } else {
-      // ── Phase 2: overlay panels scroll over frozen video ─────────────────
-      overlayProgress = scrolledPx - overlayStartPx;
-    }
-  }
+	// Fallback for browsers without requestVideoFrameCallback (e.g. older Safari).
+	// `timeupdate` fires roughly every 250ms — coarser than per-frame, but enough.
+	function handleTimeUpdate() {
+		currentTime = video.currentTime;
+		if (!isScrubbing && video.currentTime >= scrubStart) {
+			startScrubbing();
+		}
+	}
 
-  function startScrubbing() {
-    video.pause();
-    isScrubbing = true;
-    showScrollIndicator = true;
-    clearTimeout(indicatorTimer);
-    scrub();
-  }
+	// When a "caption-one" caption disappears (no replacement), fade it out
+	// gracefully over 1.5s instead of cutting it off. Other caption styles cut.
+	function handleFade(next: (typeof captions)[0] | null) {
+		if (!next && prevDisplay?.class === 'caption-one') {
+			fadingCaption = prevDisplay;
+			clearTimeout(fadeTimer);
+			fadeTimer = setTimeout(() => {
+				fadingCaption = null;
+			}, 1500);
+		} else if (next) {
+			fadingCaption = null;
+			clearTimeout(fadeTimer);
+		}
+		prevDisplay = next;
+	}
 
-  function checkScrubStart() {
-    currentTime = video.currentTime;
-    if (video.currentTime >= scrubStart) {
-      startScrubbing();
-    } else {
-      video.requestVideoFrameCallback(checkScrubStart);
-    }
-  }
+	let cleanup: (() => void) | null = null;
+	let initialized = false;
 
-  function handleTimeUpdate() {
-    currentTime = video.currentTime;
-    if (!isScrubbing && video.currentTime >= scrubStart) {
-      startScrubbing();
-    }
-  }
+	// One-time setup that runs as soon as we have a video element AND a src.
+	// Wires up listeners, computes the scrubber's height, and attaches the
+	// observers that drive autoplay and scroll handling.
+	function setupVideo() {
+		if (!video || !src || initialized) return;
+		initialized = true;
 
-  function handleFade(next: typeof captions[0] | null) {
-    if (!next && prevDisplay?.class === 'caption-one') {
-      fadingCaption = prevDisplay;
-      clearTimeout(fadeTimer);
-      fadeTimer = setTimeout(() => { fadingCaption = null; }, 1500);
-    } else if (next) {
-      fadingCaption = null;
-      clearTimeout(fadeTimer);
-    }
-    prevDisplay = next;
-  }
+		// Pick the right source for this device. Mobile gets a smaller file.
+		const activeSrc = mobileSrc && window.innerWidth < mobileBreakpoint ? mobileSrc : src;
+		video.querySelector('source')?.setAttribute('src', activeSrc);
 
-  let cleanup: (() => void) | null = null;
-  let initialized = false;
+		// `loadedmetadata` fires once we know the video's duration. We use it
+		// to set scrubScrollHeight = how tall the scrubber container needs to
+		// be in order to give the user (duration - scrubStart) seconds of scroll
+		// time, plus one viewport of "runway" for the sticky video to unstick.
+		video.addEventListener(
+			'loadedmetadata',
+			() => {
+				duration = video.duration;
+				scrubScrollHeight = (duration - scrubStart) * PX_PER_SECOND + window.innerHeight;
+			},
+			{ once: true }
+		);
 
-  function setupVideo() {
-    if (!video || !src || initialized) return;
-    initialized = true;
+		// If enough video data has buffered to play through, refresh the scrub
+		// position — useful if the user was scrolling while the video loaded.
+		video.addEventListener(
+			'canplaythrough',
+			() => {
+				if (isScrubbing) scrub();
+			},
+			{ once: true }
+		);
 
-    const activeSrc = (mobileSrc && window.innerWidth < mobileBreakpoint) ? mobileSrc : src;
-    video.querySelector('source')?.setAttribute('src', activeSrc);
+		// Modern browsers: a callback that runs once per video frame. Best for
+		// detecting the moment we cross scrubStart cleanly. Older Safari falls
+		// back to the coarser timeupdate event.
+		if ('requestVideoFrameCallback' in HTMLVideoElement.prototype) {
+			video.requestVideoFrameCallback(checkScrubStart);
+		} else {
+			video.addEventListener('timeupdate', handleTimeUpdate);
+		}
 
-    video.addEventListener(
-      'loadedmetadata',
-      () => {
-        duration = video.duration;
-        scrubScrollHeight = (duration - scrubStart) * PX_PER_SECOND + window.innerHeight;
-      },
-      { once: true }
-    );
+		video.load();
 
-    video.addEventListener(
-      'canplaythrough',
-      () => {
-        if (isScrubbing) scrub();
-      },
-      { once: true }
-    );
+		// Safety net: if the video never reaches scrubStart for some reason
+		// (e.g. autoplay blocked), force scrubbing on after 5s so the user
+		// can still drive the experience by scrolling.
+		indicatorTimer = setTimeout(() => {
+			if (!showScrollIndicator) {
+				isScrubbing = true;
+				showScrollIndicator = true;
+			}
+		}, 5000);
 
-    if ('requestVideoFrameCallback' in HTMLVideoElement.prototype) {
-      video.requestVideoFrameCallback(checkScrubStart);
-    } else {
-      video.addEventListener('timeupdate', handleTimeUpdate);
-    }
+		// IntersectionObserver = the browser's "let me know when this element
+		// enters/exits the viewport" API. Here: as soon as the video sticky
+		// region is at least 50% on-screen, start playing the intro. Then we
+		// disconnect — we only need this trigger once.
+		const playObserver = new IntersectionObserver(
+			(entries) => {
+				if (entries[0].isIntersecting && !isScrubbing) {
+					video.play();
+					playObserver.disconnect();
+				}
+			},
+			{ threshold: 0.5 }
+		);
+		playObserver.observe(sticky);
 
-    video.load();
+		// `passive: true` tells the browser we won't preventDefault() on scroll.
+		// This lets it dispatch scroll events without waiting on our handler,
+		// which keeps scrolling smooth.
+		window.addEventListener('scroll', scrub, { passive: true });
 
-    indicatorTimer = setTimeout(() => {
-      if (!showScrollIndicator) {
-        isScrubbing = true;
-        showScrollIndicator = true;
-      }
-    }, 5000);
+		// Cleanup when the component unmounts. Without this, listeners and
+		// observers would keep running after the user navigates away — wasted
+		// work and a memory leak.
+		cleanup = () => {
+			clearTimeout(indicatorTimer);
+			clearTimeout(fadeTimer);
+			window.removeEventListener('scroll', scrub);
+			window.removeEventListener('resize', scrub);
+			video.removeEventListener('timeupdate', handleTimeUpdate);
+			playObserver.disconnect();
+			sectionObserver?.disconnect();
+			// Remove the snap class from <html> so it doesn't leak into other pages.
+			document.documentElement.classList.remove('snap-overlay');
+		};
+	}
 
-    const observer = new IntersectionObserver(
-      (entries) => {
-        if (entries[0].isIntersecting && !isScrubbing) {
-          video.play();
-          observer.disconnect();
-        }
-      },
-      { threshold: 0.5 }
-    );
-    observer.observe(sticky);
+	// Watches each scroll-snap section to know when to trigger its fade-in
+	// animation and (if applicable) restart its GIF.
+	//
+	// `rootMargin: '0px 0px 200px 0px'` extends the bottom edge of the
+	// "viewport" used for intersection detection by 200px downward. So a
+	// section is reported as "intersecting" 200px BEFORE it actually enters
+	// the visible viewport — which kicks off its fade-in slightly early and
+	// gives us a small overlap with the previous panel.
+	function setupSectionObserver() {
+		sectionObserver?.disconnect();
+		if (!sectionRefs.length || sectionRefs.some((s) => !s)) return;
 
-    window.addEventListener('scroll', scrub, { passive: true });
+		sectionObserver = new IntersectionObserver(
+			(entries) => {
+				for (const entry of entries) {
+					// Find which section index this entry belongs to. (The observer
+					// reports entries in arbitrary order, so we look it up by element.)
+					const idx = sectionRefs.indexOf(entry.target as HTMLElement);
+					if (idx === -1 || !entry.isIntersecting) continue;
 
-    cleanup = () => {
-      clearTimeout(indicatorTimer);
-      clearTimeout(fadeTimer);
-      window.removeEventListener('scroll', scrub);
-      window.removeEventListener('resize', scrub);
-      video.removeEventListener('timeupdate', handleTimeUpdate);
-      observer.disconnect();
-    };
-  }
+					// Mark this section visible. The trailing self-assignment is
+					// Svelte's idiom for "tell the framework this array changed,
+					// please re-render anything that depends on it."
+					visibleSections[idx] = true;
+					visibleSections = visibleSections;
 
-  onMount(() => {
-    // Preload the video
-    const activeSrc = (mobileSrc && window.innerWidth < mobileBreakpoint) ? mobileSrc : src;
-    if (activeSrc) {
-      const link = document.createElement('link');
-      link.rel = 'preload';
-      link.as = 'video';
-      link.href = activeSrc;
-      document.head.appendChild(link);
-    }
+					// GIF restart trick: if this section has a GIF, briefly clear
+					// its src and re-set it on the next frame. That forces the
+					// browser to reload the file, which restarts the animation
+					// from frame 1 — otherwise the GIF could be mid-loop when
+					// the user reaches the section.
+					const item = sections[idx];
+					if (item?.imgSrc?.endsWith('.gif')) {
+						gifSrcs[idx] = '';
+						requestAnimationFrame(() => {
+							gifSrcs[idx] = item.imgSrc ?? '';
+							gifSrcs = [...gifSrcs];
+						});
+					}
+				}
+			},
+			{ rootMargin: '0px 0px 200px 0px', threshold: 0 }
+		);
 
-    return () => cleanup?.();
-  });
+		sectionRefs.forEach((s) => sectionObserver!.observe(s));
+	}
 
-  $: if (src && video) setupVideo();
+	// onMount runs once after the component is rendered. We use it to ask the
+	// browser to start downloading the video as soon as possible — sooner than
+	// the <video> tag itself would normally trigger — so the experience feels
+	// responsive when the user reaches it.
+	onMount(() => {
+		const activeSrc = mobileSrc && window.innerWidth < mobileBreakpoint ? mobileSrc : src;
+		if (activeSrc) {
+			const link = document.createElement('link');
+			link.rel = 'preload';
+			link.as = 'video';
+			link.href = activeSrc;
+			document.head.appendChild(link);
+		}
+
+		// Returning a function from onMount = "run this on unmount."
+		return () => cleanup?.();
+	});
+
+	// These reactive declarations re-run whenever their dependencies change.
+	// Svelte tracks the variables read inside automatically.
+
+	// Run setupVideo as soon as we have BOTH a src and a bound video element.
+	// (`initialized` inside setupVideo prevents it from running twice.)
+	$: if (src && video) setupVideo();
+
+	// Re-attach the section observer whenever the number of bound section refs
+	// matches the number of sections we expect — i.e. once they're all rendered.
+	$: if (typeof window !== 'undefined' && sectionRefs.length === sections.length) {
+		setupSectionObserver();
+	}
+
+	// Toggle the snap class on <html>. We use <html> (not <body> or a wrapper)
+	// because that's the actual scrolling container at the page level — only
+	// the scroll container's `scroll-snap-type` is honoured by the browser.
+	$: if (typeof document !== 'undefined') {
+		document.documentElement.classList.toggle('snap-overlay', inOverlayPhase);
+	}
 </script>
 
-<div
-  class="scrolly"
-  bind:this={container}
-  style="height: {totalScrollHeight}px;"
->
-  <div class="sticky" bind:this={sticky}>
+<!--
+  Scrubber: a tall container whose height = how much scrolling we want for
+  the video scrub. Inside it, the .sticky element stays glued to the top of
+  the viewport while the parent scrolls past — that's how the video appears
+  to "stay put" while we scrub through it.
+-->
+<div class="scrubber" bind:this={scrubber} style="height: {scrubScrollHeight}px;">
+	<div class="sticky" bind:this={sticky}>
+		<!-- muted + playsinline are required for autoplay on most browsers -->
+		<video bind:this={video} preload="auto" muted playsinline disablepictureinpicture>
+			<source {src} type="video/mp4" />
+		</video>
 
-    <!-- Video: always behind everything, covers full viewport -->
-    <video
-      bind:this={video}
-      preload="auto"
-      muted
-      playsinline
-      disablepictureinpicture
-    >
-      <source {src} type="video/mp4" />
-    </video>
+		{#if displayCaption}
+			<div class="caption {displayCaption.class ?? ''}" role="status">
+				{displayCaption.text}
+			</div>
+		{:else if fadingCaption}
+			<div class="caption {fadingCaption.class ?? ''} fading" role="status">
+				{fadingCaption.text}
+			</div>
+		{/if}
 
-    <!-- Captions: visible during scrub phase -->
-    {#if displayCaption}
-      <div class="caption {displayCaption.class ?? ''}" role="status">
-        {displayCaption.text}
-      </div>
-    {:else if fadingCaption}
-      <div class="caption {fadingCaption.class ?? ''} fading" role="status">
-        {fadingCaption.text}
-      </div>
-    {/if}
+		<!-- First overlay panel: rendered over the video, opacity scroll-driven -->
+		{#if overlayContent[0]}
+			<div
+				class="first-overlay {overlayContent[0].class ?? ''}"
+				data-block={overlayContent[0].class?.replace('block-', '') ?? ''}
+				style="opacity: {firstOverlayOpacity};"
+			>
+				<div class="overlay-panel first-overlay-panel">
+					{#if overlayContent[0].imgSrc}
+						{#if overlayContent[0].subCaption}
+							<div class="img-with-caption">
+								<img
+									src={firstOverlayImgSrc || overlayContent[0].imgSrc}
+									alt=""
+									class="overlay-image {overlayContent[0].imgClass ?? ''}"
+									loading="lazy"
+								/>
+								<p class="sub-caption">{overlayContent[0].subCaption}</p>
+							</div>
+						{:else}
+							<img
+								src={firstOverlayImgSrc || overlayContent[0].imgSrc}
+								alt=""
+								class="overlay-image {overlayContent[0].imgClass ?? ''}"
+								loading="lazy"
+							/>
+						{/if}
+					{/if}
+					{#if overlayContent[0].text}
+						<p class="overlay-text {overlayContent[0].textClass ?? ''}">{overlayContent[0].text}</p>
+					{/if}
+				</div>
+			</div>
+		{/if}
 
-    <!-- Scroll indicator -->
-    <div class="scroll-indicator" class:visible={showScrollIndicator} aria-hidden="true">
-      <span class="scroll-label">Scroll to continue</span>
-      <div class="chevrons">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-          <polyline points="6 9 12 15 18 9" />
-        </svg>
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-          <polyline points="6 9 12 15 18 9" />
-        </svg>
-      </div>
-    </div>
-
-    <!-- Overlay panels: each fades+slides in independently, then fades out -->
-    {#if overlayContent.length > 0}
-      <div class="overlay-stack">
-        {#each overlayContent as item, i (i)}
-          <div
-            class="overlay-panel {item.class ?? ''}"
-            data-block={item.class?.replace('block-', '') ?? ''}
-            style={panelStyles[i]}
-          >
-            {#if item.imgSrc}
-              {#if item.subCaption}
-                <div class="img-with-caption">
-                  <img
-                    src={gifSrcs[i] ?? item.imgSrc}
-                    alt=""
-                    class="overlay-image {item.imgClass ?? ''}"
-                    loading="lazy"
-                  />
-                  <p class="sub-caption">{item.subCaption}</p>
-                </div>
-              {:else}
-                <img
-                  src={gifSrcs[i] ?? item.imgSrc}
-                  alt=""
-                  class="overlay-image {item.imgClass ?? ''}"
-                  loading="lazy"
-                />
-              {/if}
-            {/if}
-            {#if item.text}
-              <p class="overlay-text {item.textClass ?? ''}">{item.text}</p>
-            {/if}
-          </div>
-        {/each}
-      </div>
-    {/if}
-
-    {#each snapPositions as pos (pos)}
-      <div class="snap-target" style="top: {pos}px;"></div>
-    {/each}
-
-  </div>
+		<div class="scroll-indicator" class:visible={showScrollIndicator} aria-hidden="true">
+			<span class="scroll-label">Scroll to continue</span>
+			<div class="chevrons">
+				<svg
+					viewBox="0 0 24 24"
+					fill="none"
+					stroke="currentColor"
+					stroke-width="2"
+					stroke-linecap="round"
+					stroke-linejoin="round"
+				>
+					<polyline points="6 9 12 15 18 9" />
+				</svg>
+				<svg
+					viewBox="0 0 24 24"
+					fill="none"
+					stroke="currentColor"
+					stroke-width="2"
+					stroke-linecap="round"
+					stroke-linejoin="round"
+				>
+					<polyline points="6 9 12 15 18 9" />
+				</svg>
+			</div>
+		</div>
+	</div>
 </div>
 
+<!--
+  Scroll-snap sections: overlayContent items from index 1 onwards. Each is
+  a full-viewport section. `bind:this={sectionRefs[i]}` populates the
+  sectionRefs array so we can observe each section in JS. `class:visible`
+  toggles the .visible class based on the matching boolean — this is what
+  triggers the CSS fade-in when the IntersectionObserver fires.
+-->
+{#each sections as item, i (i)}
+	<section
+		bind:this={sectionRefs[i]}
+		class="overlay-section {item.class ?? ''}"
+		class:visible={visibleSections[i]}
+		data-block={item.class?.replace('block-', '') ?? ''}
+	>
+		<div class="overlay-panel">
+			{#if item.imgSrc}
+				{#if item.subCaption}
+					<div class="img-with-caption">
+						<img
+							src={gifSrcs[i] ?? item.imgSrc}
+							alt=""
+							class="overlay-image {item.imgClass ?? ''}"
+							loading="lazy"
+						/>
+						<p class="sub-caption">{item.subCaption}</p>
+					</div>
+				{:else}
+					<img
+						src={gifSrcs[i] ?? item.imgSrc}
+						alt=""
+						class="overlay-image {item.imgClass ?? ''}"
+						loading="lazy"
+					/>
+				{/if}
+			{/if}
+			{#if item.text}
+				<p class="overlay-text {item.textClass ?? ''}">{item.text}</p>
+			{/if}
+		</div>
+	</section>
+{/each}
+
 <style>
-  /* ── Outer scroll container ──────────────────────────────────────────── */
-  .scrolly {
-    width: 100%;
-    position: relative;
-    left: 50%;
-    right: 50%;
-    margin-left: -50%;
-    margin-right: -50%;
-  }
+	/* ── Scrubber container ──────────────────────────────────────────────── */
+	.scrubber {
+		width: 100%;
+		position: relative;
+		left: 50%;
+		right: 50%;
+		margin-left: -50%;
+		margin-right: -50%;
+	}
 
-  /* Snap only applies in the overlay phase — proximity means the browser
-     only snaps when the user stops near a target, not on every scroll tick. */
-  :global(html) {
-    scroll-snap-type: y proximity;
-  }
+	/* Mandatory snap is only active between scrub end and the last section
+     being pinned to top — toggled by JS so the scrub phase and content
+     past the last section are never affected. */
+	:global(html.snap-overlay) {
+		scroll-snap-type: y mandatory;
+	}
 
-  .snap-target {
-    position: absolute;
-    left: 0;
-    width: 1px;
-    height: 1px;
-    scroll-snap-align: start;
-    pointer-events: none;
-  }
+	/* ── Sticky viewport for the video + first overlay ───────────────────── */
+	.sticky {
+		position: sticky;
+		top: 0;
+		height: 100vh;
+		width: 100vw;
+		overflow: hidden;
+	}
 
-  /* ── Sticky viewport panel ───────────────────────────────────────────── */
-  .sticky {
-    position: sticky;
-    top: 0;
-    height: 100vh;
-    width: 100vw;
-    overflow: hidden;
-  }
+	.sticky video {
+		position: absolute;
+		top: 0;
+		left: 0;
+		width: 100%;
+		height: 100%;
+		object-fit: cover;
+		pointer-events: none;
+		z-index: 0;
+	}
 
-  /* ── Video ───────────────────────────────────────────────────────────── */
-  .sticky video {
-    position: absolute;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    object-fit: cover;
-    pointer-events: none;
-    z-index: 0;
-  }
+	/* ── First overlay panel: over the video, scroll-driven opacity ──────── */
+	.first-overlay {
+		position: absolute;
+		top: 0;
+		left: 0;
+		width: 100%;
+		height: 100%;
+		z-index: 1;
+		pointer-events: none;
+	}
 
-  /* ── Captions ────────────────────────────────────────────────────────── */
-  .caption {
-    position: absolute;
-    bottom: 44%;
-    left: 26.5%;
-    transform: translateX(-50%);
-    color: white;
-    font-family: 'Azeret Mono', monospace;
-    font-size: 2rem;
-    font-weight: 550;
-    text-align: left;
-    max-width: 40%;
-    padding: 0.5rem 1rem;
-    animation: fadeIn 0.77s ease;
-    line-height: 2rem;
-    z-index: 2;
-  }
+	/* The first-overlay panel inherits opacity from its parent — the panel
+     itself stays fully opaque and skips the section.visible fade animation. */
+	.first-overlay .first-overlay-panel {
+		opacity: 1;
+		transform: none;
+		transition: none;
+	}
 
-  @keyframes fadeIn {
-    from { opacity: 0; transform: translateX(-50%) translateY(6px); }
-    to   { opacity: 1; transform: translateX(-50%) translateY(0); }
-  }
+	/* ── Captions ────────────────────────────────────────────────────────── */
+	.caption {
+		position: absolute;
+		bottom: 44%;
+		left: 26.5%;
+		transform: translateX(-50%);
+		color: white;
+		font-family: 'Azeret Mono', monospace;
+		font-size: 2rem;
+		font-weight: 550;
+		text-align: left;
+		max-width: 40%;
+		padding: 0.5rem 1rem;
+		animation: fadeIn 0.77s ease;
+		line-height: 2rem;
+		z-index: 2;
+	}
 
-  :global(.fading) {
-    animation: fadeOut 1.5s ease forwards !important;
-  }
+	@keyframes fadeIn {
+		from {
+			opacity: 0;
+			transform: translateX(-50%) translateY(6px);
+		}
+		to {
+			opacity: 1;
+			transform: translateX(-50%) translateY(0);
+		}
+	}
 
-  @keyframes fadeOut {
-    from { opacity: 1; }
-    to   { opacity: 0; }
-  }
+	:global(.fading) {
+		animation: fadeOut 1.5s ease forwards !important;
+	}
 
-  /* ── Per-caption overrides ───────────────────────────────────────────── */
-  :global(.caption-two) {
-    bottom: auto !important;
-    top: 50% !important;
-    left: 75% !important;
-    font-size: 1.5rem !important;
-    color: black !important;
-    line-height: 1.7rem !important;
-    font-weight: 200 !important;
-    width: 40% !important;
-    max-width: 100% !important;
-  }
+	@keyframes fadeOut {
+		from {
+			opacity: 1;
+		}
+		to {
+			opacity: 0;
+		}
+	}
 
-  /* ── Overlay stack ───────────────────────────────────────────────────── */
-  .overlay-stack {
-    position: absolute;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    z-index: 1;
-    pointer-events: none;
-  }
+	:global(.caption-two) {
+		bottom: auto !important;
+		top: 50% !important;
+		left: 75% !important;
+		font-size: 1.5rem !important;
+		color: black !important;
+		line-height: 1.7rem !important;
+		font-weight: 200 !important;
+		width: 40% !important;
+		max-width: 100% !important;
+	}
 
-  /* ── Overlay panel base — default layout: image left, text right ─────── */
-  .overlay-panel {
-    position: absolute;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    display: flex;
-    flex-direction: row;
-    align-items: center;
-    justify-content: flex-start;
-    gap: 2rem;
-    padding: 4rem 6rem;
-    box-sizing: border-box;
-    will-change: opacity, transform;
-    pointer-events: none;
-  }
+	/* ── Overlay sections (siblings after the scrubber) ──────────────────── */
+	.overlay-section {
+		position: relative;
+		width: 100%;
+		height: 100vh;
+		overflow: hidden;
+		scroll-snap-align: start;
+		scroll-snap-stop: always;
+	}
 
-  .overlay-image {
-    height: auto;
-    display: block;
-    flex-shrink: 0;
-  }
+	/* Panel inside .overlay-section: fade + slide on .visible */
+	.overlay-panel {
+		width: 100%;
+		height: 100%;
+		display: flex;
+		flex-direction: row;
+		align-items: center;
+		justify-content: flex-start;
+		gap: 2rem;
+		padding: 4rem 6rem;
+		box-sizing: border-box;
+		opacity: 0;
+		transform: translateY(30px);
+		transition:
+			opacity 0.6s ease,
+			transform 0.6s ease;
+		will-change: opacity, transform;
+	}
 
-  .overlay-text {
-    color: rgb(0, 0, 0);
-    font-family: 'Azeret Mono', monospace;
-    font-size: 1.5rem;
-    font-weight: 300;
-    line-height: 1.8rem;
-    max-width: 40%;
-    margin: 0;
-  }
+	.overlay-section.visible .overlay-panel {
+		opacity: 1;
+		transform: translateY(0);
+	}
 
-  .img-with-caption {
-    display: flex;
-    flex-direction: column;
-    align-items: flex-start;
-    flex-shrink: 0;
-    max-width: 60%;
-  }
+	.overlay-image {
+		height: auto;
+		display: block;
+		flex-shrink: 0;
+	}
 
-  .img-with-caption .overlay-image {
-    width: 100%;
-    height: auto;
-  }
+	.overlay-text {
+		color: rgb(0, 0, 0);
+		font-family: 'Azeret Mono', monospace;
+		font-size: 1.5rem;
+		font-weight: 300;
+		line-height: 1.8rem;
+		max-width: 40%;
+		margin: 0;
+	}
 
-  .sub-caption {
-    color: rgb(0, 0, 0);
-    font-family: 'Azeret Mono', monospace;
-    font-size: 0.60rem;
-    font-weight: 300;
-    margin-top: 0.3rem;
-    margin-left: 7rem;
-    text-align: left;
-    max-width: 100%;
-  }
+	.img-with-caption {
+		display: flex;
+		flex-direction: column;
+		align-items: flex-start;
+		flex-shrink: 0;
+		max-width: 60%;
+	}
 
-  /* ── Per-image size overrides ────────────────────────────────────────── */
-  :global(.overlay-img-one) { width: 60%; }
-  :global(.overlay-img-two) { width: 60%; }
+	.img-with-caption .overlay-image {
+		width: 100%;
+		height: auto;
+	}
 
-  /* ── Block three: text centered, small image underneath ─────────────── */
-  /*
-    Using a data attribute on the panel element lets us target it from
-    inside the scoped style block without needing :global or !important.
-  */
-  .overlay-panel[data-block="three"] {
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    margin-top: 5%;
-  }
+	.sub-caption {
+		color: rgb(0, 0, 0);
+		font-family: 'Azeret Mono', monospace;
+		font-size: 0.6rem;
+		font-weight: 300;
+		margin-top: 0.3rem;
+		margin-left: 7rem;
+		text-align: left;
+		max-width: 100%;
+	}
 
-  .overlay-panel[data-block="three"] .overlay-text {
-    text-align: left;
-    max-width: 50%;
-    z-index: 2;
-  }
+	:global(.overlay-img-one) {
+		width: 60%;
+	}
+	:global(.overlay-img-two) {
+		width: 60%;
+	}
 
-  .overlay-panel[data-block="three"] .overlay-image {
-    width: 25%;
-    object-fit: contain;
-    margin-top: -6rem;
-    margin-left: 55%;
-    order: 2;
-    z-index: 1;
-  }
+	/* ── Block three: text centered, small image underneath ─────────────── */
+	/* Applied to both first overlay and scroll-snap sections that carry the
+     data-block="three" attribute. */
+	.first-overlay[data-block='three'] .overlay-panel,
+	.overlay-section[data-block='three'] .overlay-panel {
+		flex-direction: column;
+		align-items: center;
+		justify-content: center;
+		margin-top: 5%;
+	}
 
-  .overlay-panel[data-block="three"] .overlay-text {
-    order: 1;
-  }
+	.first-overlay[data-block='three'] .overlay-text,
+	.overlay-section[data-block='three'] .overlay-text {
+		text-align: left;
+		max-width: 50%;
+		z-index: 2;
+		order: 1;
+	}
 
-  /* ── Scroll indicator ────────────────────────────────────────────────── */
-  .scroll-indicator {
-    position: absolute;
-    bottom: 2rem;
-    left: 50%;
-    transform: translateX(-50%);
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    gap: 0.25rem;
-    color: white;
-    opacity: 0;
-    pointer-events: none;
-    transition: opacity 0.6s ease;
-    filter: drop-shadow(0 1px 4px rgba(0, 0, 0, 0.5));
-    z-index: 3;
-  }
+	.first-overlay[data-block='three'] .overlay-image,
+	.overlay-section[data-block='three'] .overlay-image {
+		width: 25%;
+		object-fit: contain;
+		margin-top: -6rem;
+		margin-left: 55%;
+		order: 2;
+		z-index: 1;
+	}
 
-  .scroll-indicator.visible {
-    opacity: 1;
-  }
+	/* ── Scroll indicator ────────────────────────────────────────────────── */
+	.scroll-indicator {
+		position: absolute;
+		bottom: 2rem;
+		left: 50%;
+		transform: translateX(-50%);
+		display: flex;
+		flex-direction: column;
+		align-items: center;
+		gap: 0.25rem;
+		color: white;
+		opacity: 0;
+		pointer-events: none;
+		transition: opacity 0.6s ease;
+		filter: drop-shadow(0 1px 4px rgba(0, 0, 0, 0.5));
+		z-index: 3;
+	}
 
-  .scroll-label {
-    font-size: 0.75rem;
-    letter-spacing: 0.12em;
-    text-transform: uppercase;
-    font-weight: 600;
-    font-family: Azeret Mono, monospace;
-  }
+	.scroll-indicator.visible {
+		opacity: 1;
+	}
 
-  .chevrons {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-  }
+	.scroll-label {
+		font-size: 0.75rem;
+		letter-spacing: 0.12em;
+		text-transform: uppercase;
+		font-weight: 600;
+		font-family:
+			Azeret Mono,
+			monospace;
+	}
 
-  .chevrons svg {
-    width: 1.5rem;
-    height: 1.5rem;
-    animation: bounce 1.4s ease-in-out infinite;
-  }
+	.chevrons {
+		display: flex;
+		flex-direction: column;
+		align-items: center;
+	}
 
-  .chevrons svg:first-child {
-    opacity: 0.5;
-    animation-delay: 0s;
-    margin-bottom: -0.5rem;
-  }
+	.chevrons svg {
+		width: 1.5rem;
+		height: 1.5rem;
+		animation: bounce 1.4s ease-in-out infinite;
+	}
 
-  .chevrons svg:last-child {
-    animation-delay: 0.2s;
-  }
+	.chevrons svg:first-child {
+		opacity: 0.5;
+		animation-delay: 0s;
+		margin-bottom: -0.5rem;
+	}
 
-  @keyframes bounce {
-    0%, 100% { transform: translateY(0); }
-    50%       { transform: translateY(5px); }
-  }
+	.chevrons svg:last-child {
+		animation-delay: 0.2s;
+	}
+
+	@keyframes bounce {
+		0%,
+		100% {
+			transform: translateY(0);
+		}
+		50% {
+			transform: translateY(5px);
+		}
+	}
 </style>
