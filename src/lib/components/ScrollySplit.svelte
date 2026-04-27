@@ -237,7 +237,7 @@
 			<!-- Left: sticky header + subtext -->
 			<div class="split-header-col">
 				{#if header}
-					<h2 class="split-header">{header}</h2>
+					<img src={header} alt="" class="split-header-img" />
 				{/if}
 				{#if subtext}
 					<p class="split-subtext">{subtext}</p>
@@ -298,8 +298,40 @@
 				<div class="split-text-sentinel" bind:this={sentinelEl} aria-hidden="true"></div>
 			</div>
 
+			<!-- Mobile: paired video + text blocks -->
+		<div class="mobile-steps">
+			<!-- Mobile header -->
+			{#if header || subtext}
+				<div class="mobile-header">
+					{#if header}
+						<img src={header} alt="" class="mobile-header-img" />
+					{/if}
+					{#if subtext}
+						<p class="mobile-subtext">{subtext}</p>
+					{/if}
+				</div>
+			{/if}
+
+			{#each resolvedSteps as step, i (i)}
+				{@const m = toMedia(step)}
+				<div class="mobile-step">
+					<div class="mobile-video">
+						{#if m.kind === 'image'}
+							<img src={m.url} alt="" />
+						{:else}
+							<video src={m.url} muted playsinline autoplay loop></video>
+						{/if}
+					</div>
+					{#if step.text}
+						<!-- eslint-disable-next-line svelte/no-at-html-tags -->
+						<div class="mobile-text">{@html step.text}</div>
+					{/if}
+				</div>
+			{/each}
 		</div>
-	</section>
+
+	</div>  <!-- ← closes split-body -->
+</section>
 {/if}
 
 <style>
@@ -335,7 +367,15 @@
 		max-width: 280px;
 	}
 
-	.split-header {
+	.split-header-img {
+		display: block;
+		width: 160%;
+		height: auto;
+		margin-top: 4.5rem;
+		margin-left: -60%;
+	}
+
+	/* .split-header {
 		margin-top: 4.5rem;
 		margin-bottom: 0;
 		font-size: 1.75rem;
@@ -343,7 +383,7 @@
 		line-height: 1.15;
 		font-family: Azeret Mono, monospace;
 		text-align: right;
-	}
+	} */
 
 	.split-subtext {
 		margin: 0;
@@ -413,37 +453,126 @@
 		height: 0;
 	}
 
-	/* ---- Mobile ---- */
-	@media (max-width: 768px) {
+	/* Step heading images inside text cards */
+	:global(.step-heading-img) {
+		width: 50%;
+		height: auto;
+		margin-left: -0.5rem;
+	}
+
+	/* hide mobile layout on desktop */
+	.mobile-steps {
+		display: none;
+	}
+
+	@media (max-width: 1200px) {
+		/* hide the three-col layout */
+		.split-header-col,
+		.split-video-col,
+		.split-text {
+			display: none;
+		}
+
+		.mobile-header {
+			display: flex;
+			flex-direction: column;
+			align-items: flex-end;
+			margin-bottom: 2rem;
+		}
+
+		.mobile-header-img {
+			width: 50%;
+			height: auto;
+		}
+
+		.mobile-subtext {
+			text-align: right;
+			font-size: 0.95rem;
+			line-height: 1.25;
+			font-family: Azeret Mono, monospace;
+			margin: 0.5rem 0 0 0;
+		}
+
+		/* show mobile layout */
+		.mobile-steps {
+			display: flex;
+			flex-direction: column;
+			gap: 0;
+			padding: 0 1.5rem;
+			grid-column: 1 / -1;
+		}
+
+		.mobile-step {
+			display: flex;
+			flex-direction: column;
+			margin-bottom: 4rem;
+		}
+
+		.mobile-video {
+			position: sticky;
+			top: 50px;
+			z-index: 1;
+			border: 15px solid #fff;
+			box-shadow: 10px 15px 32px rgba(0,0,0,0.18);
+			aspect-ratio: 10 / 9;
+			overflow: hidden;
+		}
+
+		.mobile-video video,
+		.mobile-video img {
+			width: 100%;
+			height: 100%;
+			object-fit: cover;
+		}
+
+		.mobile-text {
+			position: relative;
+			z-index: 2;
+			background: white;
+			padding: 1.5rem;
+			font-size: 0.90rem;
+			line-height: 1.25;
+			font-family: Azeret Mono, monospace;
+		}
+
+		/* header col stacked at top */
+		.split-header-col {
+			display: none;
+		}
+
+		/*.split-header-img {
+			width: 40%;
+			margin-left: auto;
+			margin-right: 0;
+			margin-top: 0;
+			display: block;
+		}
+
+		.split-subtext {
+			text-align: right;
+			margin-bottom: 5rem;
+		} */
+
 		.split-body {
 			grid-template-columns: 1fr;
 			padding: 0 1.5rem;
 		}
 
-		.split-header-col {
-			position: relative;
-			top: 0;
-			height: auto;
-			padding: 0 0 1rem 0;
-			max-width: none;
+		/* step heading images smaller on mobile */
+		:global(.mobile-text img) {
+			width: 17% !important;
+			height: auto !important;
+			margin-left: 0 !important;
+		}
+	}
+
+	@media (max-width: 768px) {
+		:global(.mobile-text img) {
+			width: 40% !important;
 		}
 
-		.split-video-col {
-			position: relative;
-			top: 0;
-			height: auto;
-			padding: 0 0 1rem 0;
-		}
-
-		.split-video-inner {
-			aspect-ratio: 10 / 9;
-			width: 100%;
-			height: auto;
-		}
-
-		.split-text {
-			padding: 0;
-			max-width: none;
+		.mobile-header-img {
+			width: 80%;
 		}
 	}
 </style>

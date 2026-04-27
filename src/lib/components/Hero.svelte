@@ -175,6 +175,8 @@
   .hero-content p {
     font-size: 1.3cqw;
     line-height: 1.5;
+    font-style: normal !important;
+    font-family: Georgia, 'Times New Roman', Times, serif;
   }
 
   /* ── Cell base styles ── */

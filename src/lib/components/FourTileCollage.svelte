@@ -309,6 +309,10 @@
       width: 100%;
     }
 
+    .tile-3 {
+      width: 100%;
+    }
+
     .tile-4-wrapper {
       padding-right: 0;
     }
