@@ -413,7 +413,7 @@
     to   { opacity: 1; transform: translateY(0); }
   }
 
-  :global(.fading) {
+  :global(.animation-mobile .fading) {
     animation: fadeOut 0.8s ease forwards !important;
   }
 
@@ -487,7 +487,7 @@
   }
 
   .scroll-label {
-    font-size: 0.65rem;
+    font-size: 0.75rem;
     letter-spacing: 0.12em;
     text-transform: uppercase;
     font-weight: 600;
@@ -501,8 +501,8 @@
   }
 
   .chevrons svg {
-    width: 1.2rem;
-    height: 1.2rem;
+    width: 1.5rem;
+    height: 1.5rem;
     animation: bounce 1.4s ease-in-out infinite;
   }
 
