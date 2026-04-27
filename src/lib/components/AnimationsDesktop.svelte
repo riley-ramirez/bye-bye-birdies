@@ -69,7 +69,6 @@
   let scrubScrollHeight = 5000;
   let isScrubbing = false;
   let showScrollIndicator = false;
-  let indicatorTimer: ReturnType<typeof setTimeout>;
   let currentTime = 0;
   let persistedCaption: typeof captions[0] | null = null;
   // eslint-disable-next-line no-useless-assignment
@@ -213,7 +212,6 @@
     video.currentTime = scrubStart;
     isScrubbing = true;
     showScrollIndicator = true;
-    clearTimeout(indicatorTimer);
     scrub();
   }
 
@@ -277,13 +275,6 @@
 
   video.load();
 
-  indicatorTimer = setTimeout(() => {
-    if (!showScrollIndicator) {
-      isScrubbing = true;
-      showScrollIndicator = true;
-    }
-  }, 5000);
-
   const observer = new IntersectionObserver(
     (entries) => {
       if (entries[0].isIntersecting && !isScrubbing) {
@@ -300,7 +291,6 @@
   window.addEventListener('scroll', scrub, { passive: true });
 
   cleanup = () => {
-    clearTimeout(indicatorTimer);
     clearTimeout(fadeTimer);
     window.removeEventListener('scroll', scrub);
     window.removeEventListener('resize', scrub);

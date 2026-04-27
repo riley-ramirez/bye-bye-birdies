@@ -292,7 +292,7 @@
     top: 0;
     left: 0;
     width: 100%;
-    height: 100%;
+    height: 100dvh;
     overflow: hidden;
     background: #000;
     touch-action: manipulation;
@@ -371,10 +371,10 @@
     animation: fadeOut 0.8s ease forwards;
   }
 
-  .caption-row--caption-one  { top: 65%; }
+  .caption-row--caption-one  { top: 70%; }
   .caption-row--caption-two  { top: 62%; }
   .caption-row--caption-three{ top: 55%; }
-  .caption-row--caption-four { top: 18%; }
+  .caption-row--caption-four { top: 15%; }
 
   .caption-text {
     font-family: 'Azeret Mono', monospace;
@@ -390,13 +390,13 @@
     font-size: 1.4rem;
     line-height: 1.6rem;
     padding-left: 3%;
-    margin-left: 7%;
+    margin-left: 15%;
     color: white;
     text-align: left;
   }
 
   .caption-row--caption-two .caption-text {
-    font-size: 0.85rem;
+    font-size: 0.95rem;
     margin-top: 15%;
     padding-left: 9%;
     line-height: 1.1rem;
@@ -406,7 +406,7 @@
   }
 
   .caption-row--caption-three .caption-text {
-    font-size: 0.85rem;
+    font-size: 0.95rem;
     line-height: 1.1rem;
     margin-top: 10%;
     padding-left: 7%;
@@ -415,7 +415,7 @@
   }
 
   .caption-row--caption-four .caption-text {
-    font-size: 0.85rem;
+    font-size: 0.95rem;
     line-height: 1.1rem;
     margin-top: 37%;
     color: black;

@@ -66,6 +66,10 @@ html, body {
   -moz-osx-font-smoothing: auto;
 }
 
+body {
+  background: white;
+}
+
 /* Break out of the centered container to full viewport width */
 .full-bleed {
   width: 100vw;
