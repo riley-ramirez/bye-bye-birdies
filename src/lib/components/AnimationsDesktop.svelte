@@ -257,8 +257,10 @@
   function checkScrubStart() {
     currentTime = video.currentTime;
     if (video.currentTime >= scrubStart) {
-      video.currentTime = 0; // reset if somehow ahead
-      startScrubbing();
+      video.currentTime = 0;
+      video.addEventListener('seeked', () => {
+        startScrubbing();
+      }, { once: true });
     } else {
       video.requestVideoFrameCallback(checkScrubStart);
     }
@@ -267,7 +269,10 @@
   function handleTimeUpdate() {
     currentTime = video.currentTime;
     if (!isScrubbing && video.currentTime >= scrubStart) {
-      startScrubbing();
+      video.currentTime = 0;
+      video.addEventListener('seeked', () => {
+        startScrubbing();
+      }, { once: true });
     }
   }
 
@@ -298,14 +303,17 @@
       () => {
         duration = video.duration;
         scrubScrollHeight = (duration - scrubStart) * PX_PER_SECOND + window.innerHeight;
-        video.currentTime = 0; // force reset to beginning
+        video.currentTime = 0;
       },
       { once: true }
     );
 
     video.addEventListener('canplaythrough', () => {
       videoLoaded = true;
-      videoReady.set(true);  // ← add this line
+      videoReady.set(true);
+      video.requestVideoFrameCallback(() => {
+        // frame is painted, nothing needed here now
+      });
       if (isScrubbing) scrub();
     }, { once: true });
 
