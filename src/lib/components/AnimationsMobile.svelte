@@ -369,7 +369,7 @@
 
   .caption-text {
     font-family: 'Azeret Mono', monospace;
-    font-weight: 550;
+    font-weight: 400;
     white-space: normal;
     overflow-wrap: break-word;
     word-break: break-word;
