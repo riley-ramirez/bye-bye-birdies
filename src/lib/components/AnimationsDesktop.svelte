@@ -257,6 +257,7 @@
   function checkScrubStart() {
     currentTime = video.currentTime;
     if (video.currentTime >= scrubStart) {
+      video.currentTime = 0; // reset if somehow ahead
       startScrubbing();
     } else {
       video.requestVideoFrameCallback(checkScrubStart);
@@ -297,6 +298,7 @@
       () => {
         duration = video.duration;
         scrubScrollHeight = (duration - scrubStart) * PX_PER_SECOND + window.innerHeight;
+        video.currentTime = 0; // force reset to beginning
       },
       { once: true }
     );
