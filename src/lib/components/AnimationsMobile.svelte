@@ -70,15 +70,17 @@
   let displayCaption: typeof captions[0] | null = null;
   let fadingCaption: typeof captions[0] | null = null;
   let fadeTimer: ReturnType<typeof setTimeout>;
-  let captionBlocked = 0; // video time before which caption updates are suppressed
+  let captionBlocked = 0;
 
   $: sortedPauses = [...pausePoints].sort((a, b) => a - b);
   $: progress = video?.duration ? currentTime / video.duration : 0;
 
-  // Caption resolution — only runs via handleTimeUpdate, never reactively
-  // This prevents Svelte from re-running fade logic on every currentTime tick
+  // The single caption shown at any time — either the live one or the one fading out
+  $: activeCaption = displayCaption ?? fadingCaption;
+  $: isFading = !displayCaption && !!fadingCaption;
+
   function updateCaption() {
-    if (isPaused) return; // lock captions while paused — no flicker
+    if (isPaused) return;
     if (captionBlocked > 0 && currentTime < captionBlocked) return;
     if (captionBlocked > 0 && currentTime >= captionBlocked) captionBlocked = 0;
 
@@ -96,14 +98,12 @@
 
     if (next !== displayCaption) {
       if (!next && displayCaption) {
-        // Caption leaving — fade it out, don't cancel existing fade
+        // Caption leaving — fade it out
         fadingCaption = displayCaption;
         clearTimeout(fadeTimer);
         fadeTimer = setTimeout(() => { fadingCaption = null; }, 800);
-      } else if (next && !displayCaption) {
-        // New caption arriving from nothing — just show it
       } else if (next && displayCaption) {
-        // Switching directly between captions — cancel fade, show new one
+        // Switching captions — cancel any fade, show new one immediately
         fadingCaption = null;
         clearTimeout(fadeTimer);
       }
@@ -130,7 +130,6 @@
       }
     }
 
-    // updateCaption runs after isPaused is set so the guard works correctly
     updateCaption();
   }
 
@@ -149,14 +148,12 @@
     if (!video || isEnded) return;
     showTapButton = false;
     clearTimeout(tapButtonTimer);
-    // Immediately fade out whatever caption is showing
     if (displayCaption) {
       fadingCaption = displayCaption;
       displayCaption = null;
       clearTimeout(fadeTimer);
       fadeTimer = setTimeout(() => { fadingCaption = null; }, 800);
     }
-    // Block caption from re-appearing until we've passed its end time
     const currentEnd = activeCaptions.find(c => c.start <= currentTime && c.end >= currentTime)?.end ?? currentTime;
     captionBlocked = currentEnd + 0.1;
     isPaused = false;
@@ -196,7 +193,7 @@
   });
 </script>
 
-<div class="animation-mobile" bind:this={container}>
+<div class="animation-mobile" class:ended={isEnded} bind:this={container}>
   <div class="sr-only">
     <p>{videoLabel}</p>
     {#each activeCaptions as c (c.start)}
@@ -230,23 +227,17 @@
     </div>
   {/if}
 
-  <!--
-    Caption approach: a full-width row div is absolutely positioned by `top`,
-    then the inner text div handles alignment and font size.
-    This guarantees the text always has 100% container width to wrap into.
-  -->
-  {#if displayCaption}
-    <div class="caption-row caption-row--{displayCaption.class ?? 'default'}" role="status" aria-live="polite" aria-atomic="true">
+  {#if activeCaption}
+    <div
+      class="caption-row caption-row--{activeCaption.class ?? 'default'}"
+      class:fading={isFading}
+      role="status"
+      aria-live="polite"
+      aria-atomic="true"
+    >
       <div class="caption-text">
         <!-- eslint-disable-next-line svelte/no-at-html-tags -->
-        {@html displayCaption.text}
-      </div>
-    </div>
-  {:else if fadingCaption}
-    <div class="caption-row caption-row--{fadingCaption.class ?? 'default'} fading" role="status" aria-live="polite" aria-atomic="true">
-      <div class="caption-text">
-        <!-- eslint-disable-next-line svelte/no-at-html-tags -->
-        {@html fadingCaption.text}
+        {@html activeCaption.text}
       </div>
     </div>
   {/if}
@@ -284,15 +275,32 @@
     </div>
   {/if}
 </div>
+<div class="animation-mobile-spacer" aria-hidden="true"></div>
 
 <style>
   .animation-mobile {
-    position: relative;
+    position: fixed;
+    top: 0;
+    left: 0;
     width: 100%;
-    aspect-ratio: 9 / 16;
+    height: 100%;
     overflow: hidden;
     background: #000;
     touch-action: manipulation;
+  }
+
+  .animation-mobile.ended {
+    position: relative;
+    height: 100dvh;
+  }
+
+  .animation-mobile-spacer {
+    width: 100%;
+    height: 100dvh;
+  }
+
+  .animation-mobile.ended + .animation-mobile-spacer {
+    display: none;
   }
 
   .sr-only {
@@ -347,6 +355,11 @@
     width: 100%;
     z-index: 2;
     box-sizing: border-box;
+    animation: fadeIn 0.77s ease;
+  }
+
+  .caption-row.fading {
+    animation: fadeOut 0.8s ease forwards;
   }
 
   .caption-row--caption-one  { top: 65%; }
@@ -362,7 +375,6 @@
     word-break: break-word;
     padding: 0 1rem;
     box-sizing: border-box;
-    animation: fadeIn 0.77s ease;
   }
 
   .caption-row--caption-one .caption-text {
@@ -411,10 +423,6 @@
   @keyframes fadeIn {
     from { opacity: 0; transform: translateY(6px); }
     to   { opacity: 1; transform: translateY(0); }
-  }
-
-  :global(.animation-mobile .fading) {
-    animation: fadeOut 0.8s ease forwards !important;
   }
 
   @keyframes fadeOut {
