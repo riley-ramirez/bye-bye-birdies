@@ -309,11 +309,11 @@
     );
 
     video.addEventListener('canplaythrough', () => {
+      window.scrollTo(0, 0);
+      isScrubbing = false;
+      currentTime = 0;
       videoLoaded = true;
       videoReady.set(true);
-      video.requestVideoFrameCallback(() => {
-        // frame is painted, nothing needed here now
-      });
       if (isScrubbing) scrub();
     }, { once: true });
 
