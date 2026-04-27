@@ -1,6 +1,7 @@
 <script lang="ts">
   import { base } from '$app/paths';
   import { onMount } from 'svelte';
+  import { videoReady } from '$lib/stores/videoReady';
 
   export let src: string = '';
   export let bodyText: string = '';
@@ -79,6 +80,7 @@
   let container: HTMLDivElement;
   let sticky: HTMLDivElement;
   let video: HTMLVideoElement;
+  let videoLoaded = false;
   let duration = 0;
   let scrubScrollHeight = 5000;
   let isScrubbing = false;
@@ -299,13 +301,11 @@
       { once: true }
     );
 
-    video.addEventListener(
-      'canplaythrough',
-      () => {
-        if (isScrubbing) scrub();
-      },
-      { once: true }
-    );
+    video.addEventListener('canplaythrough', () => {
+      videoLoaded = true;
+      videoReady.set(true);  // ← add this line
+      if (isScrubbing) scrub();
+    }, { once: true });
 
     if ('requestVideoFrameCallback' in HTMLVideoElement.prototype) {
       video.requestVideoFrameCallback(checkScrubStart);
@@ -368,6 +368,14 @@
   style="height: {totalScrollHeight}px;"
 >
   <div class="sticky" bind:this={sticky}>
+
+    {#if !videoLoaded}
+      <div class="video-loader" aria-label="Video loading">
+        <span></span>
+        <span></span>
+        <span></span>
+      </div>
+    {/if}
 
     <!-- Video: always behind everything, covers full viewport -->
     <video
@@ -757,5 +765,33 @@
   @keyframes bounce {
     0%, 100% { transform: translateY(0); }
     50%       { transform: translateY(5px); }
+  }
+
+  .video-loader {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    display: flex;
+    gap: 0.6rem;
+    z-index: 10;
+    transition: opacity 0.6s ease;
+  }
+
+  .video-loader span {
+    width: 12px;
+    height: 12px;
+    border-radius: 50%;
+    background: white;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.3);
+    animation: pulse 1.2s ease-in-out infinite;
+  }
+
+  .video-loader span:nth-child(2) { animation-delay: 0.2s; }
+  .video-loader span:nth-child(3) { animation-delay: 0.4s; }
+
+  @keyframes pulse {
+    0%, 100% { opacity: 0.3; transform: scale(0.8); }
+    50%       { opacity: 1;   transform: scale(1.1); }
   }
 </style>

@@ -1,6 +1,7 @@
 <script lang="ts">
   import { base } from '$app/paths';
   import { onMount } from 'svelte';
+  import { videoReady } from '$lib/stores/videoReady';
 
   export let src: string = '';
   export let bodyText: string = '';
@@ -142,6 +143,7 @@
 
   function handleCanPlay() {
     isLoaded = true;
+    videoReady.set(true);
   }
 
   function continuePlayback() {
@@ -214,6 +216,13 @@
   >
     <source {src} type="video/mp4" />
   </video>
+
+  {#if !isLoaded}
+    <div class="video-loader" aria-label="Video loading">
+      <span></span><span></span><span></span>
+    </div>
+  {/if}
+
   <p id="amobile-video-desc" class="sr-only">{videoLabel}</p>
 
   {#if isLoaded}
@@ -528,4 +537,34 @@
     0%, 100% { transform: translateY(0); }
     50%       { transform: translateY(5px); }
   }
+
+  .video-loader {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    display: flex;
+    gap: 0.6rem;
+    z-index: 10;
+  }
+
+  .video-loader span {
+    width: 12px;
+    height: 12px;
+    border-radius: 50%;
+    background: white;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.3);
+    animation: pulse 1.2s ease-in-out infinite;
+    position: relative;
+    z-index: 1;
+  }
+
+  .video-loader span:nth-child(2) { animation-delay: 0.2s; }
+  .video-loader span:nth-child(3) { animation-delay: 0.4s; }
+
+  @keyframes pulse {
+    0%, 100% { opacity: 0.3; transform: scale(0.8); }
+    50%       { opacity: 1;   transform: scale(1.1); }
+  }
+
 </style>
