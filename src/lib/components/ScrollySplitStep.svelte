@@ -1,5 +1,10 @@
 <script lang="ts">
 	import type { Step } from './scrolly/utils.ts';
+	import { base } from '$app/paths';
+
+	function processHtml(html: string): string {
+		return html.replace(/src="\/illustrations\//g, `src="${base}/illustrations/`);
+	}
 
 	export let step: Step;
 	export let stepHeightVh: number;
@@ -26,7 +31,7 @@
 		{#if step.text}
 			<div class="step-body">
 				<!-- eslint-disable-next-line svelte/no-at-html-tags -->
-				{@html step.text}
+				{@html processHtml(step.text)}
 			</div>
 		{/if}
 	</div>

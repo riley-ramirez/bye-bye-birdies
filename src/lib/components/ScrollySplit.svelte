@@ -3,12 +3,18 @@
 </script>
 
 <script lang="ts">
+	import { base } from '$app/paths';	
 	import { onDestroy, onMount, tick } from 'svelte';
 	import { browser } from '$app/environment';
 	import { SvelteSet } from 'svelte/reactivity';
 
 	import ScrollySplitStep from './ScrollySplitStep.svelte';
 	import { type Step, toNum, toMedia, tryParseStepsFromBodyHtml } from './scrolly/utils.ts';
+
+	// ---- Base path helper ----
+	function processHtml(html: string): string {
+		return html.replace(/src="\/illustrations\//g, `src="${base}/illustrations/`);
+	}
 
 	// ---- Props ----
 
@@ -237,7 +243,7 @@
 			<!-- Left: sticky header + subtext -->
 			<div class="split-header-col">
 				{#if header}
-					<img src={header} alt="" class="split-header-img" />
+					<img src={base + header} alt="" class="split-header-img" />
 				{/if}
 				{#if subtext}
 					<p class="split-subtext">{subtext}</p>
@@ -304,7 +310,7 @@
 			{#if header || subtext}
 				<div class="mobile-header">
 					{#if header}
-						<img src={header} alt="" class="mobile-header-img" />
+						<img src={base + header} alt="" class="mobile-header-img" />
 					{/if}
 					{#if subtext}
 						<p class="mobile-subtext">{subtext}</p>
@@ -324,7 +330,7 @@
 					</div>
 					{#if step.text}
 						<!-- eslint-disable-next-line svelte/no-at-html-tags -->
-						<div class="mobile-text">{@html step.text}</div>
+						<div class="mobile-text">{@html processHtml(step.text)}</div>
 					{/if}
 				</div>
 			{/each}
