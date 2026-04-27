@@ -5,11 +5,16 @@
   import { base } from '$app/paths';
   import Hero from '$lib/components/Hero.svelte';
   import { videoReady } from '$lib/stores/videoReady';
+  import { onMount } from 'svelte';
 
   const blocks = rawBlocks as Block[];
   const PRE_HERO_COUNT = 2;
   const preHeroBlocks = blocks.slice(0, PRE_HERO_COUNT);
   const postHeroBlocks = blocks.slice(PRE_HERO_COUNT);
+
+  onMount(() => {
+    window.scrollTo(0, 0);
+  });
 
   $: if ($videoReady) {
     const loader = document.getElementById('app-loader');
