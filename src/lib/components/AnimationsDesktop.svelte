@@ -16,20 +16,6 @@
     persist?: boolean;
   }[] = [];
 
-  /**
-   * overlayContent: items that scroll over the frozen video after scrubbing ends.
-   * start/end are in pixels of overlay scroll progress — same idea as caption
-   * start/end being in video seconds. Each panel is visible between start and end,
-   * with a short fade-in at the start edge and fade-out at the end edge.
-   *
-   * Example:
-   *   { start: 0,   end: 800,  imgSrc: "...", text: "..." }
-   *   { start: 700, end: 1500, imgSrc: "...", text: "..." }
-   *   { start: 1400, end: 2200, imgSrc: "...", text: "..." }
-   *
-   * Overlap the ranges slightly (e.g. 100px) so panels cross-fade rather than
-   * leaving a gap between them.
-   */
   export let overlayContent: {
     start: number;
     end: number;
@@ -42,7 +28,6 @@
     alt?: string;
   }[] = [];
 
-  /** Accessible label describing what the video shows, for screen readers */
   export let videoLabel: string = 'Scrollable animation';
 
   $: if (!src && bodyText) {
@@ -63,7 +48,6 @@
     }
   }
 
-  // Decode HTML entities (e.g. &mdash; → —) that may come through from the CMS
   function decodeEntities(str: string): string {
     return str
       .replace(/&mdash;/g, '—')
@@ -94,16 +78,10 @@
   let fadeTimer: ReturnType<typeof setTimeout>;
   let prevDisplay: typeof captions[0] | null = null;
 
-  // How many px past the end of the scrub phase the user has scrolled
   let overlayProgress = 0;
-
-  // px over which each panel fades in at its start edge and fades out at its end edge
   const FADE_PX = 150;
-
   let overlayPanelHeight = typeof window !== 'undefined' ? window.innerHeight : 800;
 
-  // Total overlay scroll height:
-  // last panel's end + a hold period (one viewport) so it sticks before page moves on
   $: lastEnd = overlayContent.length > 0
     ? Math.max(...overlayContent.map(c => c.end))
     : 0;
@@ -112,26 +90,19 @@
     : 0;
   $: totalScrollHeight = scrubScrollHeight + overlayScrollHeight;
 
-  // Snap target positions: one per overlay panel, offset from the top of .scrolly.
-  // Each panel's leading edge in overlayProgress space maps back to an absolute
-  // scroll position by reversing the overlayStartPx calculation.
   $: snapPositions = (() => {
     const scrubEnd = scrubScrollHeight - (typeof window !== 'undefined' ? window.innerHeight : 800);
     const overlayStartPx = scrubEnd - PX_PER_SECOND;
     return overlayContent.map(item => overlayStartPx + item.start);
   })();
 
-  // Reactive array of per-panel styles — re-derives whenever overlayProgress changes.
   function calcPanelStyle(item: typeof overlayContent[0], p: number, isLast: boolean): string {
     if (p < item.start) {
       return 'opacity: 0; transform: translateY(30px); pointer-events: none;';
     }
-    // Last panel never fades out — stays visible until the scroll container ends
     if (!isLast && p > item.end) {
       return 'opacity: 0; transform: translateY(0); pointer-events: none;';
     }
-
-    // Last panel: once fully faded in, lock it fully visible forever
     if (isLast && p >= item.start + FADE_PX) {
       return 'opacity: 1; transform: translateY(0);';
     }
@@ -142,11 +113,9 @@
     const fromEnd   = item.end - p;
 
     if (fromStart < FADE_PX) {
-      // Fade in + slide up on entry
       opacity    = fromStart / FADE_PX;
       translateY = 30 * (1 - fromStart / FADE_PX);
     } else if (!isLast && fromEnd < FADE_PX) {
-      // Fade out on exit (skipped for last panel)
       opacity = fromEnd / FADE_PX;
     } else {
       opacity = 1;
@@ -155,14 +124,12 @@
     return `opacity: ${opacity}; transform: translateY(${translateY}px);`;
   }
 
-  // Returns true when a panel should be considered visible to assistive technology
   function isPanelVisible(item: typeof overlayContent[0], p: number, isLast: boolean): boolean {
     if (p < item.start) return false;
     if (!isLast && p > item.end) return false;
     return true;
   }
 
-  // Re-runs whenever overlayProgress or overlayContent changes
   $: panelStyles = overlayContent.map((item, i) =>
     calcPanelStyle(item, overlayProgress, i === overlayContent.length - 1)
   );
@@ -186,7 +153,7 @@
           gifSrcs[i] = '';
           requestAnimationFrame(() => {
             gifSrcs[i] = item.imgSrc ?? '';
-            gifSrcs = [...gifSrcs]; // trigger reactivity
+            gifSrcs = [...gifSrcs];
           });
         }
       }
@@ -215,13 +182,9 @@
     const { top } = container.getBoundingClientRect();
     const scrolledPx = -top;
     const scrubEnd = scrubScrollHeight - window.innerHeight;
-
-    // Overlay starts counting 1 video-second (PX_PER_SECOND px) before scrub ends
     const overlayStartPx = scrubEnd - PX_PER_SECOND;
 
-    // ── Phase 1: scrub the video ──────────────────────────────────────────
     if (scrolledPx <= scrubEnd) {
-      // Start overlayProgress early so panels begin appearing in the last second
       overlayProgress = scrolledPx > overlayStartPx ? scrolledPx - overlayStartPx : 0;
 
       if (!isScrubbing) return;
@@ -241,13 +204,13 @@
 
       if (progress > 0.05) showScrollIndicator = false;
     } else {
-      // ── Phase 2: overlay panels scroll over frozen video ─────────────────
       overlayProgress = scrolledPx - overlayStartPx;
     }
   }
 
   function startScrubbing() {
     video.pause();
+    video.currentTime = scrubStart;
     isScrubbing = true;
     showScrollIndicator = true;
     clearTimeout(indicatorTimer);
@@ -257,10 +220,7 @@
   function checkScrubStart() {
     currentTime = video.currentTime;
     if (video.currentTime >= scrubStart) {
-      video.currentTime = 0;
-      video.addEventListener('seeked', () => {
-        startScrubbing();
-      }, { once: true });
+      startScrubbing();
     } else {
       video.requestVideoFrameCallback(checkScrubStart);
     }
@@ -269,10 +229,7 @@
   function handleTimeUpdate() {
     currentTime = video.currentTime;
     if (!isScrubbing && video.currentTime >= scrubStart) {
-      video.currentTime = 0;
-      video.addEventListener('seeked', () => {
-        startScrubbing();
-      }, { once: true });
+      startScrubbing();
     }
   }
 
@@ -303,15 +260,11 @@
       () => {
         duration = video.duration;
         scrubScrollHeight = (duration - scrubStart) * PX_PER_SECOND + window.innerHeight;
-        video.currentTime = 0;
       },
       { once: true }
     );
 
     video.addEventListener('canplaythrough', () => {
-      window.scrollTo(0, 0);
-      isScrubbing = false;
-      currentTime = 0;
       videoLoaded = true;
       videoReady.set(true);
       if (isScrubbing) scrub();
@@ -356,7 +309,6 @@
   }
 
   onMount(() => {
-    // Preload the video
     const activeSrc = (mobileSrc && window.innerWidth < mobileBreakpoint) ? mobileSrc : src;
     if (activeSrc) {
       const link = document.createElement('link');
@@ -387,7 +339,6 @@
       </div>
     {/if}
 
-    <!-- Video: always behind everything, covers full viewport -->
     <video
       bind:this={video}
       preload="auto"
@@ -400,7 +351,6 @@
     </video>
     <p id="video-description" class="sr-only">{videoLabel}</p>
 
-    <!-- Captions: visible during scrub phase -->
     {#if displayCaption}
       <div
         class="caption {displayCaption.class ?? ''}"
@@ -421,7 +371,6 @@
       </div>
     {/if}
 
-    <!-- Scroll indicator: decorative, hidden from screen readers -->
     <div class="scroll-indicator" class:visible={showScrollIndicator} aria-hidden="true">
       <span class="scroll-label">Scroll to continue</span>
       <div class="chevrons">
@@ -434,12 +383,7 @@
       </div>
     </div>
 
-    <!-- Overlay panels: each fades+slides in independently, then fades out -->
     {#if overlayContent.length > 0}
-      <!--
-        Screen-reader-only static transcript of all content.
-        Sighted users experience this via scroll; assistive tech reads it here.
-      -->
       <div class="sr-only">
         {#each captions as caption, i (i)}
           <p>{caption.text}</p>
@@ -458,7 +402,6 @@
         {/each}
       </div>
 
-      <!-- Visual overlay panels, hidden from screen readers (content above handles AT) -->
       <div class="overlay-stack" aria-hidden="true">
         {#each overlayContent as item, i (i)}
           <div
@@ -504,7 +447,6 @@
 </div>
 
 <style>
-  /* ── Screen-reader-only utility ──────────────────────────────────────── */
   .sr-only {
     position: absolute;
     width: 1px;
@@ -517,7 +459,6 @@
     border: 0;
   }
 
-  /* ── Outer scroll container ──────────────────────────────────────────── */
   .scrolly {
     width: 100%;
     position: relative;
@@ -527,8 +468,6 @@
     margin-right: -50%;
   }
 
-  /* Snap only applies in the overlay phase — proximity means the browser
-     only snaps when the user stops near a target, not on every scroll tick. */
   :global(html) {
     scroll-snap-type: y proximity;
   }
@@ -542,7 +481,6 @@
     pointer-events: none;
   }
 
-  /* ── Sticky viewport panel ───────────────────────────────────────────── */
   .sticky {
     position: sticky;
     top: 0;
@@ -551,7 +489,6 @@
     overflow: hidden;
   }
 
-  /* ── Video ───────────────────────────────────────────────────────────── */
   .sticky video {
     position: absolute;
     top: 0;
@@ -563,7 +500,6 @@
     z-index: 0;
   }
 
-  /* ── Captions ────────────────────────────────────────────────────────── */
   .caption {
     position: absolute;
     bottom: 44%;
@@ -595,7 +531,6 @@
     to   { opacity: 0; }
   }
 
-  /* ── Per-caption overrides ───────────────────────────────────────────── */
   :global(.caption-two) {
     bottom: auto !important;
     top: 50% !important;
@@ -608,7 +543,6 @@
     max-width: 100% !important;
   }
 
-  /* ── Overlay stack ───────────────────────────────────────────────────── */
   .overlay-stack {
     position: absolute;
     top: 0;
@@ -619,7 +553,6 @@
     pointer-events: none;
   }
 
-  /* ── Overlay panel base — default layout: image left, text right ─────── */
   .overlay-panel {
     position: absolute;
     top: 0;
@@ -653,7 +586,6 @@
     margin: 0;
   }
 
-  /* Space between paragraphs injected via {@html} */
   .overlay-text :global(p) {
     margin: 0 0 1rem 0;
   }
@@ -685,15 +617,9 @@
     max-width: 100%;
   }
 
-  /* ── Per-image size overrides ────────────────────────────────────────── */
   :global(.overlay-img-one) { width: 60%; }
   :global(.overlay-img-two) { width: 60%; }
 
-  /* ── Block three: text centered, small image underneath ─────────────── */
-  /*
-    Using a data attribute on the panel element lets us target it from
-    inside the scoped style block without needing :global or !important.
-  */
   .overlay-panel[data-block="three"] {
     flex-direction: column;
     align-items: center;
@@ -720,7 +646,6 @@
     order: 1;
   }
 
-  /* ── Scroll indicator ────────────────────────────────────────────────── */
   .scroll-indicator {
     position: absolute;
     bottom: 2rem;
