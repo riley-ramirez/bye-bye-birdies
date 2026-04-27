@@ -21,7 +21,7 @@
     class?: string;
     persist?: boolean;
   }[] = [];
-  export let videoLabel: string = 'Tap-to-continue animation';
+  export let videoLabel: string = 'Tap-to-continue animation. First screen shows a chestnut-collared longspur in the hand of a researcher. The second screen shows the range map of the species, which breeds in the Northern United States and Southern Canada and winters in southern United States and Mexico. The third screen shows a chart of the decline of the species since 1970. Since 1970, the chestnut-collared longspur has declined over 67%. The last screen has an illustration of a motus tag size comparison of a motus tag to a quarter.';
 
   function decodeEntities(str: string): string {
     return str
