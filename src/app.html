@@ -6,17 +6,16 @@
 		<link rel="stylesheet" href="%sveltekit.assets%/fonts/fonts.css" />
 		<style>
 			#app-loader {
-			position: fixed;
-			inset: 0;
-			background: #000 url('/animation/first-frame.jpg') center center / cover no-repeat;
-			display: flex;
-			align-items: center;
-			justify-content: center;
-			gap: 0.6rem;
-			z-index: 9999;
-			transition: opacity 0.3s ease;
+				position: fixed;
+				inset: 0;
+				background: #000 url('%sveltekit.assets%/animation/first-frame.jpg') center center / cover no-repeat;
+				display: flex;
+				align-items: center;
+				justify-content: center;
+				gap: 0.6rem;
+				z-index: 9999;
+				transition: opacity 0.3s ease;
 			}
-
 			#app-loader::before {
 				content: '';
 				position: absolute;
@@ -50,6 +49,12 @@
 		%sveltekit.head%
 	</head>
 	<body data-sveltekit-preload-data="hover">
+		<script>
+			if (history.scrollRestoration) {
+				history.scrollRestoration = 'manual';
+			}
+			window.scrollTo(0, 0);
+		</script>
 		<div id="app-loader">
 			<span></span><span></span><span></span>
 		</div>
