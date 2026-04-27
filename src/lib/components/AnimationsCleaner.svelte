@@ -38,7 +38,11 @@
     imgSrc?: string;
     imgClass?: string;
     subCaption?: string;
+    alt?: string;
   }[] = [];
+
+  /** Accessible label describing what the video shows, for screen readers */
+  export let videoLabel: string = 'Scrollable animation';
 
   $: if (!src && bodyText) {
     try {
@@ -68,7 +72,7 @@
       .replace(/&gt;/g, '>')
       .replace(/&quot;/g, '"')
       .replace(/&#39;/g, "'")
-      .replace(/&nbsp;/g, ' ');
+      .replace(/&nbsp;/g, ' ');
   }
 
   const PX_PER_SECOND = 900;
@@ -106,7 +110,7 @@
     : 0;
   $: totalScrollHeight = scrubScrollHeight + overlayScrollHeight;
 
-   // Snap target positions: one per overlay panel, offset from the top of .scrolly.
+  // Snap target positions: one per overlay panel, offset from the top of .scrolly.
   // Each panel's leading edge in overlayProgress space maps back to an absolute
   // scroll position by reversing the overlayStartPx calculation.
   $: snapPositions = (() => {
@@ -125,7 +129,7 @@
       return 'opacity: 0; transform: translateY(0); pointer-events: none;';
     }
 
-     // Last panel: once fully faded in, lock it fully visible forever
+    // Last panel: once fully faded in, lock it fully visible forever
     if (isLast && p >= item.start + FADE_PX) {
       return 'opacity: 1; transform: translateY(0);';
     }
@@ -149,9 +153,20 @@
     return `opacity: ${opacity}; transform: translateY(${translateY}px);`;
   }
 
+  // Returns true when a panel should be considered visible to assistive technology
+  function isPanelVisible(item: typeof overlayContent[0], p: number, isLast: boolean): boolean {
+    if (p < item.start) return false;
+    if (!isLast && p > item.end) return false;
+    return true;
+  }
+
   // Re-runs whenever overlayProgress or overlayContent changes
   $: panelStyles = overlayContent.map((item, i) =>
     calcPanelStyle(item, overlayProgress, i === overlayContent.length - 1)
+  );
+
+  $: panelVisible = overlayContent.map((item, i) =>
+    isPanelVisible(item, overlayProgress, i === overlayContent.length - 1)
   );
 
   let gifSrcs: string[] = [];
@@ -361,22 +376,34 @@
       muted
       playsinline
       disablepictureinpicture
+      aria-describedby="video-description"
     >
       <source {src} type="video/mp4" />
     </video>
+    <p id="video-description" class="sr-only">{videoLabel}</p>
 
     <!-- Captions: visible during scrub phase -->
     {#if displayCaption}
-      <div class="caption {displayCaption.class ?? ''}" role="status">
+      <div
+        class="caption {displayCaption.class ?? ''}"
+        role="status"
+        aria-live="polite"
+        aria-atomic="true"
+      >
         {displayCaption.text}
       </div>
     {:else if fadingCaption}
-      <div class="caption {fadingCaption.class ?? ''} fading" role="status">
+      <div
+        class="caption {fadingCaption.class ?? ''} fading"
+        role="status"
+        aria-live="polite"
+        aria-atomic="true"
+      >
         {fadingCaption.text}
       </div>
     {/if}
 
-    <!-- Scroll indicator -->
+    <!-- Scroll indicator: decorative, hidden from screen readers -->
     <div class="scroll-indicator" class:visible={showScrollIndicator} aria-hidden="true">
       <span class="scroll-label">Scroll to continue</span>
       <div class="chevrons">
@@ -391,19 +418,43 @@
 
     <!-- Overlay panels: each fades+slides in independently, then fades out -->
     {#if overlayContent.length > 0}
-      <div class="overlay-stack">
+      <!--
+        Screen-reader-only static transcript of all content.
+        Sighted users experience this via scroll; assistive tech reads it here.
+      -->
+      <div class="sr-only">
+        {#each captions as caption, i (i)}
+          <p>{caption.text}</p>
+        {/each}
+        {#each overlayContent as item, i (i)}
+          {#if item.text}
+            <!-- eslint-disable-next-line svelte/no-at-html-tags -->
+            <div>{@html item.text}</div>
+          {/if}
+          {#if item.alt}
+            <p>{item.alt}</p>
+          {/if}
+          {#if item.subCaption}
+            <p>{item.subCaption}</p>
+          {/if}
+        {/each}
+      </div>
+
+      <!-- Visual overlay panels, hidden from screen readers (content above handles AT) -->
+      <div class="overlay-stack" aria-hidden="true">
         {#each overlayContent as item, i (i)}
           <div
             class="overlay-panel {item.class ?? ''}"
             data-block={item.class?.replace('block-', '') ?? ''}
             style={panelStyles[i]}
+            aria-hidden={panelVisible[i] ? 'false' : 'true'}
           >
             {#if item.imgSrc}
               {#if item.subCaption}
                 <div class="img-with-caption">
                   <img
                     src={gifSrcs[i] ?? item.imgSrc}
-                    alt=""
+                    alt={item.alt ?? ''}
                     class="overlay-image {item.imgClass ?? ''}"
                     loading="lazy"
                   />
@@ -412,14 +463,15 @@
               {:else}
                 <img
                   src={gifSrcs[i] ?? item.imgSrc}
-                  alt=""
+                  alt={item.alt ?? ''}
                   class="overlay-image {item.imgClass ?? ''}"
                   loading="lazy"
                 />
               {/if}
             {/if}
             {#if item.text}
-              <p class="overlay-text {item.textClass ?? ''}">{item.text}</p>
+              <!-- eslint-disable-next-line svelte/no-at-html-tags -->
+              <div class="overlay-text {item.textClass ?? ''}">{@html item.text}</div>
             {/if}
           </div>
         {/each}
@@ -434,6 +486,19 @@
 </div>
 
 <style>
+  /* ── Screen-reader-only utility ──────────────────────────────────────── */
+  .sr-only {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    padding: 0;
+    margin: -1px;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+    white-space: nowrap;
+    border: 0;
+  }
+
   /* ── Outer scroll container ──────────────────────────────────────────── */
   .scrolly {
     width: 100%;
@@ -570,6 +635,14 @@
     margin: 0;
   }
 
+  /* Space between paragraphs injected via {@html} */
+  .overlay-text :global(p) {
+    margin: 0 0 1rem 0;
+  }
+  .overlay-text :global(p:last-child) {
+    margin-bottom: 0;
+  }
+
   .img-with-caption {
     display: flex;
     flex-direction: column;
@@ -586,10 +659,10 @@
   .sub-caption {
     color: rgb(0, 0, 0);
     font-family: 'Azeret Mono', monospace;
-    font-size: 0.60rem;
+    font-size: 0.70rem;
     font-weight: 300;
     margin-top: 0.3rem;
-    margin-left: 7rem;
+    margin-left: 10%;
     text-align: left;
     max-width: 100%;
   }

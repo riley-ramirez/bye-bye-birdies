@@ -3,6 +3,7 @@
   import { base } from '$app/paths';
   import { onMount, onDestroy } from 'svelte';
   import { browser } from '$app/environment';
+  import { tick } from 'svelte';
 
   export let images: string = '';
   export let alts: string = '';
@@ -12,6 +13,13 @@
   let sectionEl: HTMLElement;
   let isVisible = false;
   let observer: IntersectionObserver | null = null;
+  let videoEls: HTMLVideoElement[] = [];
+
+  function playAll() {
+    videoEls.forEach(v => {
+      if (v) v.play().catch(() => {/* autoplay blocked, ignore */});
+    });
+  }
 
   function normalizeStaticPath(raw: string): string {
     const s = raw.trim();
@@ -41,11 +49,13 @@
     if (!browser) return;
 
     observer = new IntersectionObserver(
-      (entries) => {
+      async (entries) => {
         if (!entries[0].isIntersecting) return;
         isVisible = true;
         observer?.disconnect();
         observer = null;
+        await tick(); // wait for videos to render
+        playAll();
       },
       { rootMargin: '500px 0px' }
     );
@@ -70,7 +80,7 @@
 
         <div class="tile tile-1">
           {#if tiles[0]?.type === 'video'}
-            <video src={tiles[0].src} aria-label={tiles[0].alt} autoplay muted loop playsinline>
+            <video bind:this={videoEls[0]} src={tiles[0].src} aria-label={tiles[0].alt} autoplay muted loop playsinline>
               <track kind="captions" />
             </video>
           {:else}
@@ -86,7 +96,7 @@
 
         <div class="tile tile-2">
           {#if tiles[1]?.type === 'video'}
-            <video src={tiles[1].src} aria-label={tiles[1].alt} autoplay muted loop playsinline>
+            <video bind:this={videoEls[1]} src={tiles[1].src} aria-label={tiles[1].alt} autoplay muted loop playsinline>
               <track kind="captions" />
             </video>
           {:else}
@@ -98,7 +108,7 @@
 
           <div class="tile tile-3">
             {#if tiles[2]?.type === 'video'}
-              <video src={tiles[2].src} aria-label={tiles[2].alt} autoplay muted loop playsinline>
+              <video bind:this={videoEls[2]} src={tiles[2].src} aria-label={tiles[2].alt} autoplay muted loop playsinline>
                 <track kind="captions" />
               </video>
             {:else}
@@ -109,7 +119,7 @@
           <div class="tile-4-wrapper">
             <div class="tile tile-4">
               {#if tiles[3]?.type === 'video'}
-                <video src={tiles[3].src} aria-label={tiles[3].alt} autoplay muted loop playsinline>
+                <video bind:this={videoEls[3]} src={tiles[3].src} aria-label={tiles[3].alt} autoplay muted loop playsinline>
                   <track kind="captions" />
                 </video>
               {:else}

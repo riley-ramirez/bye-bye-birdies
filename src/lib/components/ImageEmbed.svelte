@@ -71,10 +71,10 @@
 
 {#if shouldRender}
   {#if size === 'full'}
-    <figure class="my-3 full-bleed">
-      <img src={finalSrc} alt={finalAlt} class="img-fluid border" loading="lazy" style="margin-top: 3rem; margin-bottom: 3rem;"/>
+    <figure class="full-bleed" style="margin-top: 6rem; margin-bottom: 3rem;">
+      <img src={finalSrc} alt={finalAlt} class="img-fluid border"/>
       {#if caption}
-        <figcaption class="mt-2 text-muted small">{caption}</figcaption>
+        <figcaption class="mt-2 text-muted small" style="margin-left: 1rem;">{caption}</figcaption>
       {/if}
     </figure>
 
@@ -138,6 +138,7 @@
     margin-left: 1.25rem;
     margin-bottom: 0rem;
     rotate: 1.5deg;
+    filter: drop-shadow(2px 0px 2px rgba(0, 0, 0, 0.3));
   }
 
   .img-inline img {
@@ -159,8 +160,10 @@
 
   .img-margin--left {
     float: left;
+    width: 55%;
     margin-left: -300px; /* pushes into left margin */
-    margin-right: 1rem;
+    margin-right: 1.5rem;
+    rotate: -2deg;
   }
 
   .img-margin--right {

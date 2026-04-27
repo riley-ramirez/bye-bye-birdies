@@ -375,10 +375,10 @@
 
 	.split-header-img {
 		display: block;
-		width: 160%;
+		width: 170%;
 		height: auto;
 		margin-top: 4.5rem;
-		margin-left: -60%;
+		margin-left: -64%;
 	}
 
 	/* .split-header {
@@ -464,6 +464,12 @@
 		width: 50%;
 		height: auto;
 		margin-left: -0.5rem;
+	}
+
+	:global(.step-img) {
+		width: 80%;
+		height: auto;
+		margin-left: 0;
 	}
 
 	/* hide mobile layout on desktop */
