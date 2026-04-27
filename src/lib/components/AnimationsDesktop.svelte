@@ -249,64 +249,65 @@
   let initialized = false;
 
   function setupVideo() {
-    if (!video || !src || initialized) return;
-    initialized = true;
+  if (!video || !src || initialized) return;
+  initialized = true;
 
-    const activeSrc = (mobileSrc && window.innerWidth < mobileBreakpoint) ? mobileSrc : src;
-    video.querySelector('source')?.setAttribute('src', activeSrc);
+  const activeSrc = (mobileSrc && window.innerWidth < mobileBreakpoint) ? mobileSrc : src;
+  video.querySelector('source')?.setAttribute('src', activeSrc);
 
-    video.addEventListener(
-      'loadedmetadata',
-      () => {
-        duration = video.duration;
-        scrubScrollHeight = (duration - scrubStart) * PX_PER_SECOND + window.innerHeight;
-      },
-      { once: true }
-    );
+  video.addEventListener(
+    'loadedmetadata',
+    () => {
+      duration = video.duration;
+      scrubScrollHeight = (duration - scrubStart) * PX_PER_SECOND + window.innerHeight;
+    },
+    { once: true }
+  );
 
-    video.addEventListener('canplaythrough', () => {
-      videoLoaded = true;
-      videoReady.set(true);
-      if (isScrubbing) scrub();
-    }, { once: true });
+  video.addEventListener('canplaythrough', () => {
+    videoLoaded = true;
+    videoReady.set(true);
+  }, { once: true });
 
-    if ('requestVideoFrameCallback' in HTMLVideoElement.prototype) {
-      video.requestVideoFrameCallback(checkScrubStart);
-    } else {
-      video.addEventListener('timeupdate', handleTimeUpdate);
-    }
-
-    video.load();
-
-    indicatorTimer = setTimeout(() => {
-      if (!showScrollIndicator) {
-        isScrubbing = true;
-        showScrollIndicator = true;
-      }
-    }, 5000);
-
-    const observer = new IntersectionObserver(
-      (entries) => {
-        if (entries[0].isIntersecting && !isScrubbing) {
-          video.play();
-          observer.disconnect();
-        }
-      },
-      { threshold: 0.5 }
-    );
-    observer.observe(sticky);
-
-    window.addEventListener('scroll', scrub, { passive: true });
-
-    cleanup = () => {
-      clearTimeout(indicatorTimer);
-      clearTimeout(fadeTimer);
-      window.removeEventListener('scroll', scrub);
-      window.removeEventListener('resize', scrub);
-      video.removeEventListener('timeupdate', handleTimeUpdate);
-      observer.disconnect();
-    };
+  if ('requestVideoFrameCallback' in HTMLVideoElement.prototype) {
+    video.requestVideoFrameCallback(checkScrubStart);
+  } else {
+    video.addEventListener('timeupdate', handleTimeUpdate);
   }
+
+  video.load();
+
+  indicatorTimer = setTimeout(() => {
+    if (!showScrollIndicator) {
+      isScrubbing = true;
+      showScrollIndicator = true;
+    }
+  }, 5000);
+
+  const observer = new IntersectionObserver(
+    (entries) => {
+      if (entries[0].isIntersecting && !isScrubbing) {
+        video.play().then(() => {
+          video.requestVideoFrameCallback(checkScrubStart);
+        });
+        observer.disconnect();
+      }
+    },
+    { threshold: 0.5 }
+  );
+  observer.observe(sticky);
+
+  window.addEventListener('scroll', scrub, { passive: true });
+
+  cleanup = () => {
+    clearTimeout(indicatorTimer);
+    clearTimeout(fadeTimer);
+    window.removeEventListener('scroll', scrub);
+    window.removeEventListener('resize', scrub);
+    video.removeEventListener('timeupdate', handleTimeUpdate);
+    observer.disconnect();
+  };
+}
 
   onMount(() => {
     const activeSrc = (mobileSrc && window.innerWidth < mobileBreakpoint) ? mobileSrc : src;
