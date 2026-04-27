@@ -1,95 +1,88 @@
 <script lang="ts">
-	import { base } from '$app/paths';
-	import { onMount } from 'svelte';
-	// DocRenderer passes these from the shortcode attrs
+  import { onMount } from 'svelte';
+  import { browser } from '$app/environment';
 
-	export let src: string = '';
-	export let bodyText: string = '';
-	// Parse src from bodyText if src wasn't passed directly
-	$: if (!src && bodyText) {
-		try {
-			const parsed = JSON.parse(bodyText);
-			src = base + '/' + (parsed.img ?? '');
-		} catch (e) {
-			console.error('Animations: could not parse bodyText', e);
-		}
-	}
-	const PX_PER_SECOND = 900;
-	let container: HTMLDivElement;
-	let video: HTMLVideoElement;
-	let duration = 0;
-	let scrollHeight = 5000;
-	function scrub() {
-		if (!video || !duration) return;
-		const { top, height } = container.getBoundingClientRect();
-		const progress = Math.min(Math.max(-top / (height - window.innerHeight), 0), 1);
-		video.currentTime = progress * duration;
-	}
-	
-    let cleanup: (() => void) | null = null;
-    let initialized = false;
+  type Caption = {
+    start: number;
+    end: number;
+    text: string;
+    class?: string;
+    persist?: boolean;
+  };
 
-    function setupVideo() {
-        if (!video || !src || initialized) return;
-        initialized = true;
+  type OverlayItem = {
+    start: number;
+    end: number;
+    text?: string;
+    class?: string;
+    textClass?: string;
+    imgSrc?: string;
+    imgClass?: string;
+    subCaption?: string;
+    alt?: string;
+  };
 
-        video.addEventListener(
-            'loadedmetadata',
-            () => {
-                duration = video.duration;
-                scrollHeight = duration * PX_PER_SECOND + window.innerHeight;
-                scrub();
-            },
-            { once: true }
-        );
+  export let src: string = '';
+  export let bodyText: string = '';
+  export let scrubStart: number = 4;
+  export let mobileSrc: string = '';
+  export let mobileBreakpoint: number = 768;
+  export let captions: Caption[] = [];
+  export let overlayContent: OverlayItem[] = [];
+  export let pausePoints: number[] = [];
+  export let videoLabel: string = 'Scrollable animation';
 
-        video.load();
-
-        window.addEventListener('scroll', scrub, { passive: true });
-        window.addEventListener('resize', scrub, { passive: true });
-
-        cleanup = () => {
-            window.removeEventListener('scroll', scrub);
-            window.removeEventListener('resize', scrub);
-        };
+  // Parse bodyText eagerly so mobileSrc and pausePoints are available
+  // before we decide which component to mount
+  if (bodyText && !src) {
+    try {
+      const parsed = JSON.parse(bodyText);
+      if (parsed.mobileSrc) mobileSrc = parsed.mobileSrc;
+      if (parsed.pausePoints) pausePoints = parsed.pausePoints;
+    } catch (e) {
+      console.error('Animations wrapper: could not parse bodyText', e);
     }
+  }
 
-    onMount(() => {
-        return () => cleanup?.();
-    });
+  // Only resolved in the browser — stays null during SSR so neither
+  // child component is rendered on the server, avoiding hydration mismatches
+  let isMobile: boolean | null = null;
 
-    $: if (src && video) setupVideo();
+  onMount(() => {
+    isMobile = window.innerWidth < mobileBreakpoint;
+  });
 </script>
 
-<div class="scrolly" bind:this={container} style="height: {scrollHeight}px;">
-	<div class="sticky">
-		<video bind:this={video} preload="auto" muted playsinline disablepictureinpicture>
-			<source {src} type="video/mp4" />
-		</video>
-	</div>
-</div>
-
-<style>
-	.scrolly {
-		width: 100vw;
-		margin-left: calc(50% - 50vw);
-		position: relative;
-		margin-bottom: 3rem;
-	}
-	.sticky {
-		position: sticky;
-		top: 0;
-		height: 100vh;
-		width: 100vw;
-		overflow: hidden;
-	}
-	.sticky video {
-		position: absolute;
-		top: 0;
-		left: 0;
-		width: 100%;
-		height: 100%;
-		object-fit: cover;
-		pointer-events: none;
-	}
-</style>
+<!--
+  Nothing is rendered during SSR (isMobile is null server-side).
+  On the client, onMount resolves isMobile and the correct component mounts fresh,
+  with no hydration mismatch because the server also rendered nothing here.
+-->
+{#if browser && isMobile !== null}
+  {#if isMobile}
+    {#await import('./AnimationsMobile.svelte') then { default: AnimationsMobile }}
+      <AnimationsMobile
+        src={src as string}
+        bodyText={bodyText as string}
+        mobileSrc={mobileSrc as string}
+        mobileBreakpoint={mobileBreakpoint as number}
+        captions={captions as Caption[]}
+        pausePoints={pausePoints as number[]}
+        videoLabel={videoLabel as string}
+      />
+    {/await}
+  {:else}
+    {#await import('./AnimationsDesktop.svelte') then { default: AnimationsDesktop }}
+      <AnimationsDesktop
+        src={src as string}
+        bodyText={bodyText as string}
+        scrubStart={scrubStart as number}
+        mobileSrc={mobileSrc as string}
+        mobileBreakpoint={mobileBreakpoint as number}
+        captions={captions as Caption[]}
+        overlayContent={overlayContent as OverlayItem[]}
+        videoLabel={videoLabel as string}
+      />
+    {/await}
+  {/if}
+{/if}
