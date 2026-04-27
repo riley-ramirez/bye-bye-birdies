@@ -13,9 +13,6 @@ export default {
     },
     prerender: {
       handleHttpError: 'warn'
-    },
-    router: {
-      scrollRestoration: 'manual'
     }
   }
 };

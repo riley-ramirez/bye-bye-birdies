@@ -13,7 +13,10 @@
   const postHeroBlocks = blocks.slice(PRE_HERO_COUNT);
 
   onMount(() => {
-    window.scrollTo(0, 0);
+    if (typeof window !== 'undefined') {
+      history.scrollRestoration = 'manual';
+      window.scrollTo(0, 0);
+    }
   });
 
   $: if ($videoReady) {
