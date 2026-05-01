@@ -5,11 +5,33 @@
   import { base } from '$app/paths';
   import Hero from '$lib/components/Hero.svelte';
   import { videoReady } from '$lib/stores/videoReady';
+  import About from '$lib/components/About.svelte';
 
   const blocks = rawBlocks as Block[];
   const PRE_HERO_COUNT = 2;
   const preHeroBlocks = blocks.slice(0, PRE_HERO_COUNT);
   const postHeroBlocks = blocks.slice(PRE_HERO_COUNT);
+
+  // Split at [[OutroStart]]
+  const outroIndex = postHeroBlocks.findIndex(
+    (b) => b.type === 'shortcode' && b.name === 'OutroStart'
+  );
+  const mainBlocks = outroIndex === -1 ? postHeroBlocks : postHeroBlocks.slice(0, outroIndex);
+  const afterOutro = outroIndex === -1 ? [] : postHeroBlocks.slice(outroIndex + 1);
+
+  // Pull [[About]] block out separately — render it behind the outro text
+  const aboutBlockIndex = afterOutro.findIndex(
+    (b) => b.type === 'shortcode' && b.name === 'About'
+  );
+  const aboutBlock = aboutBlockIndex !== -1 ? afterOutro[aboutBlockIndex] : null;
+  // Everything between OutroStart and About is the floating outro text
+  const outroBlocks = aboutBlockIndex !== -1
+    ? afterOutro.slice(0, aboutBlockIndex)
+    : afterOutro;
+
+  const aboutBodyHtml = aboutBlock?.type === 'shortcode'
+    ? (aboutBlock.attrs?.bodyHtml as string | undefined)
+    : undefined;
 
   $: if ($videoReady) {
     const loader = document.getElementById('app-loader');
@@ -41,14 +63,48 @@
   </div>
 </div>
 
+<!-- Main article body -->
 <div class="container">
   <div class="row justify-content-center">
     <div class="col-12 col-sm-10 col-lg-8 col-xxl-6">
-      <DocRenderer blocks={postHeroBlocks} />
+      <DocRenderer blocks={mainBlocks} />
     </div>
   </div>
 </div>
 
-<footer class="container-fluid bg-dark text-white p-4" style="margin-top: 4rem;">
+<!-- Outro: text floats on top, About video sits behind both -->
+<div class="outro-wrap">
+  <!-- About renders first in DOM so it's behind the text -->
+  <About bodyHtml={aboutBodyHtml} />
+
+  <!-- Outro text sits on top via z-index -->
+  {#if outroBlocks.length > 0}
+    <div class="outro-text container">
+      <div class="row justify-content-center">
+        <div class="col-12 col-sm-10 col-lg-8 col-xxl-6">
+          <DocRenderer blocks={outroBlocks} />
+        </div>
+      </div>
+    </div>
+  {/if}
+</div>
+
+<footer class="container-fluid bg-dark text-white p-4">
   <p class="text-center">This project was produced at the UC Berkeley Graduate School of Journalism.</p>
 </footer>
+
+<style>
+  .outro-wrap {
+    position: relative;
+  }
+
+  /* Outro text floats above the About video using absolute positioning */
+  .outro-text {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    z-index: 10;
+    padding-bottom: 3rem;
+  }
+</style>

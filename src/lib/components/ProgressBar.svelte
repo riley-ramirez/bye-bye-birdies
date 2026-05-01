@@ -27,7 +27,7 @@
     top: 0;
     left: 0;
     right: 0;
-    height: 2px;
+    height: 3px;
     z-index: 9999;
     opacity: 0;
     transition: opacity 0.4s ease;
@@ -41,7 +41,7 @@
   .progress-bar {
     height: 100%;
     width: 100%;
-    background: #1a1a1a;
+    background: #990000;
     transform-origin: left center;
     transform: scaleX(0);
     /* No transition — updates every scroll event for crisp tracking */

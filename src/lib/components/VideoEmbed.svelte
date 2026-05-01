@@ -185,6 +185,7 @@
   $: controlsBool = toBool(controls, true);
   $: playsinlineBool = toBool(playsinline, true);
   $: muteBool = toBool(mute, false);
+  $: loopBool = toBool(loop, false);
 </script>
 
 {#if resolved}
@@ -200,6 +201,7 @@
             autoplay={autoplayBool}
             controls={controlsBool}
             muted={muteBool}
+            loop={loopBool} 
             playsinline={playsinlineBool}
             preload="none"
           >
@@ -311,5 +313,6 @@
   width: 100%;
   margin-bottom: 1.5rem;
 }
+
 
 </style>
