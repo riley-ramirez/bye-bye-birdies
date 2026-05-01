@@ -13,6 +13,7 @@
   export let controls: boolean | string | undefined = true;
   export let playsinline: boolean | string | undefined = true;
   export let mute: boolean | string | undefined = false;
+  export let loop: boolean | string | undefined = false;
 
   // Optional: for local files, allow captions track served from /static
   // Example shortcode: captions="/captions/my-video.vtt" srclang="en" label="English"
@@ -133,9 +134,12 @@
       params.set('controls', controlsBool ? '1' : '0');
       if (playsinlineBool) params.set('playsinline', '1');
       params.set('rel', '0');
+      params.set('loop', '1');
 
       // YouTube: autoplay often requires muted
       if (muteBool) params.set('mute', '1');
+
+      if (toBool(loop, false)) params.set('loop', '1');
 
       const qs = params.toString();
       const embedUrl = `https://www.youtube-nocookie.com/embed/${encodeURIComponent(id)}${
@@ -214,7 +218,7 @@
         {/if}
       </div>
       {#if caption}
-        <figcaption class="mt-2 text-muted small">{caption}</figcaption>
+        <figcaption class="mt-2 text-muted text-left" style="font-family: Azeret Mono, monospace; font-size: small;">{caption}</figcaption>
       {/if}
     </figure>
 
@@ -254,7 +258,7 @@
         </div>
       </div>
       {#if caption}
-        <figcaption class="mt-2 text-muted small text-center">{caption}</figcaption>
+        <figcaption class="mt-2 text-muted text-center" style="font-family: Azeret Mono, monospace; font-size: small;">{caption}</figcaption>
       {/if}
     </figure>
 
@@ -290,7 +294,7 @@
         </div>
         {#if caption}
           <!-- svelte-ignore a11y_figcaption_parent -->
-          <figcaption class="mt-2 text-muted text-center" style="font-family: Azeret Mono, monospace; font-size: small;">{caption}</figcaption>
+          <figcaption class="mt-2 text-muted text-left" style="font-family: Azeret Mono, monospace; font-size: small; margin-left: 1rem;">{caption}</figcaption>
         {/if}
       </div>
     </figure>

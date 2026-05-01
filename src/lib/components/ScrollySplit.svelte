@@ -381,16 +381,6 @@
 		margin-left: -64%;
 	}
 
-	/* .split-header {
-		margin-top: 4.5rem;
-		margin-bottom: 0;
-		font-size: 1.75rem;
-		font-weight: 400;
-		line-height: 1.15;
-		font-family: Azeret Mono, monospace;
-		text-align: right;
-	} */
-
 	.split-subtext {
 		margin: 0;
 		font-size: 0.95rem;
@@ -481,7 +471,7 @@
 		/* hide the three-col layout */
 		.split-header-col,
 		.split-video-col,
-		.split-text {
+.split-text {
 			display: none;
 		}
 
@@ -547,23 +537,9 @@
 			font-family: Azeret Mono, monospace;
 		}
 
-		/* header col stacked at top */
 		.split-header-col {
 			display: none;
 		}
-
-		/*.split-header-img {
-			width: 40%;
-			margin-left: auto;
-			margin-right: 0;
-			margin-top: 0;
-			display: block;
-		}
-
-		.split-subtext {
-			text-align: right;
-			margin-bottom: 5rem;
-		} */
 
 		.split-body {
 			grid-template-columns: 1fr;

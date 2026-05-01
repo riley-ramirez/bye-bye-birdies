@@ -74,7 +74,7 @@
     <figure class="full-bleed" style="margin-top: 6rem; margin-bottom: 3rem;">
       <img src={finalSrc} alt={finalAlt} class="img-fluid border"/>
       {#if caption}
-        <figcaption class="mt-2 text-muted small" style="margin-left: 1rem;">{caption}</figcaption>
+        <figcaption class="mt-2 text-muted text-left" style="font-family: Azeret Mono, monospace; font-size: small; margin-left: 1rem;">{caption}</figcaption>
       {/if}
     </figure>
 
@@ -86,7 +86,7 @@
           <div class="col-12 col-lg-10 col-xxl-8">
             <img src={finalSrc} alt={finalAlt} class="img-fluid border" loading="lazy" />
             {#if caption}
-              <figcaption class="mt-2 text-muted small">{caption}</figcaption>
+              <figcaption class="mt-2 text-muted text-left" style="font-family: Azeret Mono, monospace; font-size: small;">{caption}</figcaption>
             {/if}
           </div>
         </div>
