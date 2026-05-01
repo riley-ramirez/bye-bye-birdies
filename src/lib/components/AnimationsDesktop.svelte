@@ -103,12 +103,12 @@
     ? Math.max(...overlayContent.map(c => c.end))
     : 0;
   $: overlayScrollHeight = overlayContent.length > 0
-    ? lastEnd + overlayPanelHeight
+    ? lastEnd + overlayPanelHeight * 0.5
     : 0;
   $: totalScrollHeight = scrubScrollHeight + overlayScrollHeight;
 
   // Scroll position (within the container) at which the overlay section begins
-  $: scrubEndPx = scrubScrollHeight - (typeof window !== 'undefined' ? window.innerHeight : 800);
+  $: scrubEndPx = scrubScrollHeight - overlayPanelHeight;
   $: overlayStartPx = scrubEndPx - PX_PER_SECOND;
 
   // Video fade begins VIDEO_FADE_EARLY px before scrub ends — slightly early.
@@ -125,10 +125,9 @@
   // Instead we use a separate flowing block for the last panel exit.
   $: lastPanelFullyInPx = lastPanelStartPx + FADE_PX;
 
-  $: snapPositions = (() => {
-    const vh = typeof window !== 'undefined' ? window.innerHeight : 800;
-    return overlayContent.map(item => overlayStartPx + item.start - vh * 0.1);
-  })();
+  $: snapPositions = overlayContent.map(item =>
+    overlayStartPx + item.start - overlayPanelHeight * 0.1
+  );
 
   function calcPanelStyle(item: typeof overlayContent[0], p: number, isLast: boolean): string {
     if (p < item.start) {
@@ -228,12 +227,27 @@
 
   let splitActive = false;
 
+  let splitActivePending: ReturnType<typeof requestAnimationFrame> | null = null;
+
   function setSplitActive(active: boolean) {
     if (active === splitActive) return;
-    splitActive = active;
+    // Delay activation by one rAF so the video layer has painted before the
+    // background switches — prevents the single-frame flash on Safari/Chrome.
     if (active) {
-      document.body.classList.add('scrolly-split-active');
+      if (splitActivePending) return; // already scheduled
+      splitActivePending = requestAnimationFrame(() => {
+        splitActivePending = null;
+        if (splitActive) return; // already active, no-op
+        splitActive = true;
+        document.body.classList.add('scrolly-split-active');
+      });
     } else {
+      // Deactivation is immediate — we want the background to go away promptly
+      if (splitActivePending) {
+        cancelAnimationFrame(splitActivePending);
+        splitActivePending = null;
+      }
+      splitActive = false;
       document.body.classList.remove('scrolly-split-active');
     }
   }
@@ -376,7 +390,20 @@
 
     video.load();
 
-    // Intersection observer fires the play + lock
+    // Check if we're restoring to a position past the animation intro.
+    // If so, jump straight to scrubbing mode without playing the locked intro.
+    const restoredY = parseFloat(sessionStorage.getItem(SCROLL_KEY) ?? '0');
+    const containerTop = container?.getBoundingClientRect().top ?? 0;
+    const restoredScrolledPx = restoredY - (window.scrollY + containerTop);
+
+    if (restoredY > 10 && restoredScrolledPx > scrubStart * PX_PER_SECOND * 0.1) {
+      // User was past the intro — skip lock, go straight to scrubbing
+      video.addEventListener('loadedmetadata', () => {
+        startScrubbing();
+      }, { once: true });
+    }
+
+    // Intersection observer fires the play + lock (only if not already scrubbing)
     const observer = new IntersectionObserver(
       (entries) => {
         if (entries[0].isIntersecting && !isScrubbing) {
@@ -403,20 +430,32 @@
     };
   }
 
+  // Key used to save scroll position in sessionStorage so reloads restore position
+  const SCROLL_KEY = 'animationsDesktop_scrollY';
+
   onMount(() => {
     overlayPanelHeight = window.innerHeight;
     mounted = true;
 
-    const activeSrc = (mobileSrc && window.innerWidth < mobileBreakpoint) ? mobileSrc : src;
-    if (activeSrc) {
-      const link = document.createElement('link');
-      link.rel = 'preload';
-      link.as = 'video';
-      link.href = activeSrc;
-      document.head.appendChild(link);
+    // (preload link removed — as="video" is not a valid preload type)
+
+    // Save scroll position before the page unloads so we can restore on reload
+    const saveScroll = () => sessionStorage.setItem(SCROLL_KEY, String(window.scrollY));
+    window.addEventListener('beforeunload', saveScroll);
+
+    // Restore scroll position if the user was past the animation on last visit.
+    // We wait one tick so the container height is painted before scrolling.
+    const savedY = parseFloat(sessionStorage.getItem(SCROLL_KEY) ?? '0');
+    if (savedY > 10) {
+      requestAnimationFrame(() => {
+        window.scrollTo({ top: savedY, behavior: 'instant' });
+      });
     }
 
-    return () => cleanup?.();
+    return () => {
+      window.removeEventListener('beforeunload', saveScroll);
+      cleanup?.();
+    };
   });
 
   $: if (src && video) setupVideo();
@@ -453,103 +492,108 @@
     class="sticky"
     bind:this={sticky}
   >
-    <!-- ── Video layer (fades out after scrub) ── -->
-    <div
-      class="video-layer"
-      style="opacity: {videoOpacity};"
-      aria-hidden={videoOpacity === 0 ? 'true' : 'false'}
-    >
-      {#if !videoLoaded}
-        <div class="video-loader" aria-label="Video loading">
-          <span></span>
-          <span></span>
-          <span></span>
-        </div>
-      {/if}
-
-      <video
-        bind:this={video}
-        preload="auto"
-        muted
-        playsinline
-        disablepictureinpicture
-        aria-describedby="video-description"
+    {#if mounted}
+      <!-- ── Video layer (fades out after scrub) ── -->
+      <div
+        class="video-layer"
+        style="opacity: {videoOpacity};"
+        aria-hidden={videoOpacity === 0 ? 'true' : 'false'}
       >
-        <source {src} type="video/mp4" />
-      </video>
-      <p id="video-description" class="sr-only">{videoLabel}</p>
+        {#if !videoLoaded}
+          <div class="video-loader" aria-label="Video loading">
+            <span></span>
+            <span></span>
+            <span></span>
+          </div>
+        {/if}
 
-      {#if displayCaption}
-        <div
-          class="caption {displayCaption.class ?? ''}"
-          role="status"
-          aria-live="polite"
-          aria-atomic="true"
+        <video
+          bind:this={video}
+          preload="auto"
+          muted
+          playsinline
+          disablepictureinpicture
+          aria-describedby="video-description"
         >
-          {displayCaption.text}
+          <source {src} type="video/mp4" />
+        </video>
+        <p id="video-description" class="sr-only">{videoLabel}</p>
+
+        {#key displayCaption?.text ?? ''}
+          {#if displayCaption}
+            <div
+              class="caption {displayCaption.class ?? ''}"
+              role="status"
+              aria-live="polite"
+              aria-atomic="true"
+            >
+              {displayCaption.text}
+            </div>
+          {:else if fadingCaption}
+            <div
+              class="caption {fadingCaption.class ?? ''} fading"
+              role="status"
+              aria-live="polite"
+              aria-atomic="true"
+            >
+              {fadingCaption.text}
+            </div>
+          {/if}
+        {/key}
+
+        <div class="scroll-indicator" class:visible={showScrollIndicator} aria-hidden="true">
+          <span class="scroll-label">Scroll to continue</span>
+          <div class="chevrons">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <polyline points="6 9 12 15 18 9" />
+            </svg>
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <polyline points="6 9 12 15 18 9" />
+            </svg>
+          </div>
         </div>
-      {:else if fadingCaption}
-        <div
-          class="caption {fadingCaption.class ?? ''} fading"
-          role="status"
-          aria-live="polite"
-          aria-atomic="true"
-        >
-          {fadingCaption.text}
+      </div>
+
+      <!-- ── Overlay panels ── -->
+      {#if overlayContent.length > 0}
+        <!-- Screen-reader text -->
+        <div class="sr-only">
+          {#each captions as caption, i (i)}
+            <p>{caption.text}</p>
+          {/each}
+          {#each overlayContent as item, i (i)}
+            {#if item.text}<div>{@html item.text}</div>{/if}
+            {#if item.alt}<p>{item.alt}</p>{/if}
+            {#if item.subCaption}<p>{item.subCaption}</p>{/if}
+          {/each}
+        </div>
+
+        <div class="overlay-stack" aria-hidden="true">
+          {#each overlayContent as item, i (i)}
+            <div
+              class="overlay-panel {item.class ?? ''}"
+              data-block={item.class?.replace('block-', '') ?? ''}
+              style={panelStyles[i]}
+              aria-hidden={panelVisible[i] ? 'false' : 'true'}
+            >
+              {#if item.imgSrc}
+                {#if item.subCaption}
+                  <div class="img-with-caption">
+                    <img src={gifSrcs[i] ?? item.imgSrc} alt={item.alt ?? ''} class="overlay-image {item.imgClass ?? ''}" loading="lazy" />
+                    <p class="sub-caption">{item.subCaption}</p>
+                  </div>
+                {:else}
+                  <img src={gifSrcs[i] ?? item.imgSrc} alt={item.alt ?? ''} class="overlay-image {item.imgClass ?? ''}" loading="lazy" />
+                {/if}
+              {/if}
+              {#if item.text}
+                <!-- eslint-disable-next-line svelte/no-at-html-tags -->
+                <div class="overlay-text {item.textClass ?? ''}">{@html item.text}</div>
+              {/if}
+            </div>
+          {/each}
         </div>
       {/if}
-
-      <div class="scroll-indicator" class:visible={showScrollIndicator} aria-hidden="true">
-        <span class="scroll-label">Scroll to continue</span>
-        <div class="chevrons">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-            <polyline points="6 9 12 15 18 9" />
-          </svg>
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-            <polyline points="6 9 12 15 18 9" />
-          </svg>
-        </div>
-      </div>
-    </div>
-
-    <!-- ── Overlay panels ── -->
-    {#if overlayContent.length > 0}
-      <div class="sr-only">
-        {#each captions as caption, i (i)}
-          <p>{caption.text}</p>
-        {/each}
-        {#each overlayContent as item, i (i)}
-          {#if item.text}<div>{@html item.text}</div>{/if}
-          {#if item.alt}<p>{item.alt}</p>{/if}
-          {#if item.subCaption}<p>{item.subCaption}</p>{/if}
-        {/each}
-      </div>
-
-      <div class="overlay-stack" aria-hidden="true">
-        {#each overlayContent as item, i (i)}
-          <div
-            class="overlay-panel {item.class ?? ''}"
-            data-block={item.class?.replace('block-', '') ?? ''}
-            style={panelStyles[i]}
-            aria-hidden={panelVisible[i] ? 'false' : 'true'}
-          >
-            {#if item.imgSrc}
-              {#if item.subCaption}
-                <div class="img-with-caption">
-                  <img src={gifSrcs[i] ?? item.imgSrc} alt={item.alt ?? ''} class="overlay-image {item.imgClass ?? ''}" loading="lazy" />
-                  <p class="sub-caption">{item.subCaption}</p>
-                </div>
-              {:else}
-                <img src={gifSrcs[i] ?? item.imgSrc} alt={item.alt ?? ''} class="overlay-image {item.imgClass ?? ''}" loading="lazy" />
-              {/if}
-            {/if}
-            {#if item.text}
-              <!-- eslint-disable-next-line svelte/no-at-html-tags -->
-              <div class="overlay-text {item.textClass ?? ''}">{@html item.text}</div>
-            {/if}
-          </div>
-        {/each}
-      </div>
     {/if}
 
   </div><!-- /.sticky -->
@@ -562,7 +606,7 @@
     The sticky behind it continues to show the last panel at opacity:1,
     so there's no visual discontinuity.
   -->
-  {#if overlayContent.length > 0}
+  {#if mounted && overlayContent.length > 0}
     {@const lastItem = overlayContent[overlayContent.length - 1]}
     <div
       class="last-panel-exit"
@@ -591,10 +635,12 @@
     </div>
   {/if}
 
-  <!-- Snap targets -->
-  {#each snapPositions as pos (pos)}
-    <div class="snap-target" style="top: {pos}px;"></div>
-  {/each}
+  <!-- Snap targets (only rendered client-side; positions depend on window.innerHeight) -->
+  {#if mounted}
+    {#each snapPositions as pos (pos)}
+      <div class="snap-target" style="top: {pos}px;"></div>
+    {/each}
+  {/if}
 
 </div>
 
@@ -630,8 +676,8 @@
   .snap-target {
     position: absolute;
     left: 0;
-    width: 10px;
-    height: 10px;
+    width: 1px;
+    height: 1px;
     scroll-snap-align: start;
     pointer-events: none;
   }
@@ -655,7 +701,7 @@
    */
   .last-panel-exit {
     position: relative;
-    height: 20vh;
+    height: 10vh;
     width: 100vw;
     overflow: hidden;
     transition: opacity 0.15s ease;
