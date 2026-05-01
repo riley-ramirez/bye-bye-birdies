@@ -114,5 +114,11 @@ body {
   padding-bottom: 2rem;
 }
 
+::-webkit-scrollbar {
+  display: none;
+}
 
+* {
+  scrollbar-width: none;
+}
 

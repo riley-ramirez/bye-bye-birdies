@@ -3,6 +3,7 @@
 	import '../app.scss';
 	import { base } from '$app/paths';
 	import { onMount } from 'svelte';
+	import ProgressBar from '$lib/components/ProgressBar.svelte';
 
 	let { children } = $props();
 
@@ -18,6 +19,8 @@
 <svelte:head>
 	<link rel="icon" href={favicon} />
 </svelte:head>
+
+<ProgressBar />
 
 <!-- Fixed clone of the background — only shown during ScrollySplit sections -->
 <div
