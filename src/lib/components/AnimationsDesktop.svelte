@@ -464,7 +464,14 @@
 
   // Video fades from 1→0 as videoFadeProgress goes 0→1
   $: videoOpacity = 1 - videoFadeProgress;
+
+  const videoSrc = base+ '/'+ 'animation/animation_revised2.mp4'
+
 </script>
+
+<svelte:head>
+	  <link rel="preload" href=videoSrc as="video" type="video/mp4">
+</svelte:head>
 
 <!--
   Layout strategy
