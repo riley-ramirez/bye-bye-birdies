@@ -668,19 +668,8 @@
     margin-right: -50%;
   }
 
-  /* ── Snap ──────────────────────────────────────────────── */
-  :global(html) {
-    scroll-snap-type: y proximity;
-  }
-
-  .snap-target {
-    position: absolute;
-    left: 0;
-    width: 1px;
-    height: 1px;
-    scroll-snap-align: start;
-    pointer-events: none;
-  }
+  /* Scroll snap removed — proximity snapping caused scroll resistance on panels */
+  .snap-target { display: none; }
 
   /* ── Single sticky element (never releases) ───────────────── */
   .sticky {
