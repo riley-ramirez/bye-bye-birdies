@@ -74,7 +74,7 @@
     <figure class="full-bleed" style="margin-top: 6rem; margin-bottom: 3rem;">
       <img src={finalSrc} alt={finalAlt} class="img-fluid border"/>
       {#if caption}
-        <figcaption class="mt-2 text-muted text-left" style="font-family: Azeret Mono, monospace; font-size: small; margin-left: 1rem;">{caption}</figcaption>
+        <figcaption class="mt-2 text-muted text-left" style="font-family: Azeret Mono, monospace; font-size: small; margin-left: 2rem;">{caption}</figcaption>
       {/if}
     </figure>
 
@@ -160,17 +160,19 @@
 
   .img-margin--left {
     float: left;
-    width: 55%;
-    margin-left: -300px; /* pushes into left margin */
-    margin-right: 1.5rem;
+    width: 65%;
+    margin-top: 3%;
+    margin-left: -200px; /* pushes into left margin */
+    margin-right: 2rem;
     rotate: -2deg;
+    filter: drop-shadow(2px 1px 2px rgba(0, 0, 0, 0.1));
   }
 
   .img-margin--right {
     float: right;
     margin-right: -250px; /* pushes into right margin */
     margin-left: -2rem;
-    margin-top: 1rem;
+    margin-top: -3rem;
   }
 
   .img-margin img {
