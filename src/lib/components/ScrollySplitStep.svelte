@@ -3,7 +3,9 @@
 	import { base } from '$app/paths';
 
 	function processHtml(html: string): string {
-		return html.replace(/src="\/illustrations\//g, `src="${base}/illustrations/`);
+		return html
+			.replace(/src="\/illustrations\//g, `src="${base}/illustrations/`)
+			.replace(/<img /g, '<img loading="lazy" ');
 	}
 
 	export let step: Step;

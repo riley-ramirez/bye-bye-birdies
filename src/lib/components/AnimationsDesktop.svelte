@@ -367,6 +367,7 @@
 
     const activeSrc = (mobileSrc && window.innerWidth < mobileBreakpoint) ? mobileSrc : src;
     video.querySelector('source')?.setAttribute('src', activeSrc);
+    if (video.readyState === 0) video.load(); // only load if not already started
 
     video.addEventListener(
       'loadedmetadata',
@@ -437,7 +438,12 @@
     overlayPanelHeight = window.innerHeight;
     mounted = true;
 
-    // (preload link removed — as="video" is not a valid preload type)
+    // ← ADD THIS: start downloading immediately, don't wait for IntersectionObserver
+    const activeSrc = (mobileSrc && window.innerWidth < mobileBreakpoint) ? mobileSrc : (src || videoSrc);
+    if (video) {
+      video.querySelector('source')?.setAttribute('src', activeSrc);
+      video.load(); // kicks off the network request right away
+    }
 
     // Save scroll position before the page unloads so we can restore on reload
     const saveScroll = () => sessionStorage.setItem(SCROLL_KEY, String(window.scrollY));

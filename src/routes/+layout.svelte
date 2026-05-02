@@ -66,4 +66,12 @@
 	:global(body.scrolly-split-active) #app-background {
 		background-image: none !important;
 	}
+
+	:global(body.scrolly-split-section-active) #app-background-fixed {
+    opacity: 1;
+	}
+
+	:global(body.scrolly-split-section-active) #app-background {
+		background-image: none !important;
+	}
 </style>

@@ -13,7 +13,9 @@
 
 	// ---- Base path helper ----
 	function processHtml(html: string): string {
-		return html.replace(/src="\/illustrations\//g, `src="${base}/illustrations/`);
+		return html
+			.replace(/src="\/illustrations\//g, `src="${base}/illustrations/`)
+			.replace(/<img /g, '<img loading="lazy" ');
 	}
 
 	// ---- Props ----
@@ -64,8 +66,8 @@
 		await tick();
 
 		const inView = sectionEl
-			? sectionEl.getBoundingClientRect().bottom > 0 &&
-			  sectionEl.getBoundingClientRect().top < window.innerHeight
+			? sectionEl.getBoundingClientRect().bottom > -window.innerHeight &&
+			sectionEl.getBoundingClientRect().top < window.innerHeight * 2
 			: false;
 
 		for (let i = 0; i < videoEls.length; i++) {
@@ -96,6 +98,13 @@
 			const rect = videoInnerEl.getBoundingClientRect();
 			videoBox = { top: rect.top, left: rect.left, width: rect.width, height: rect.height };
 			slideDistancePx = vh - rect.top;
+		}
+
+		if (sectionEl) {
+			const sectionRect = sectionEl.getBoundingClientRect();
+			const hasStuck   = sectionRect.top    <= videoTop;
+			const hasUnstuck = sectionRect.bottom <= vh;
+			document.body.classList.toggle('scrolly-split-section-active', hasStuck && !hasUnstuck);
 		}
 
 		const triggerBottom = vh;
@@ -156,7 +165,8 @@
 		const cardTop = lastCard.getBoundingClientRect().top + window.scrollY;
 
 		const currentSectionHeight = sectionEl.offsetHeight;
-		const neededSectionHeight = (cardTop - sectionTop) + window.innerHeight - (2 * videoTop) + (slideDistancePx * 0.15);
+		const lastCardHeight = lastCard.offsetHeight;
+		const neededSectionHeight = (cardTop - sectionTop) + window.innerHeight - (2 * videoTop) + (slideDistancePx * 0.15) + (lastCardHeight * -0.6);
 		const sentinelHeight = Math.max(0, neededSectionHeight - currentSectionHeight + sentinelEl.offsetHeight);
 
 		sentinelEl.style.height = sentinelHeight + 'px';
@@ -183,7 +193,6 @@
 	// ---- Lifecycle ----
 
 	let observer: IntersectionObserver | null = null;
-	let visibilityObserver: IntersectionObserver | null = null;
 
 	onMount(() => {
 		if (!browser) return;
@@ -196,28 +205,19 @@
 				if (!entries[0].isIntersecting) return;
 				observer?.disconnect();
 				observer = null;
+				if (videoInnerEl) {
+					const rect = videoInnerEl.getBoundingClientRect();
+					videoBox = { top: rect.top, left: rect.left, width: rect.width, height: rect.height };
+					slideDistancePx = window.innerHeight - rect.top;
+				}
+				showStep(0);
 				onScrollOrResize();
 				requestAnimationFrame(measureSentinel);
 			},
-			{ rootMargin: '400px 0px' }
+			{ rootMargin: '0px 0px' }
 		);
 
-		showStep(0);
 		if (sectionEl) observer.observe(sectionEl);
-
-		visibilityObserver = new IntersectionObserver(
-			(entries) => {
-				const inView = entries[0].isIntersecting;
-				document.body.classList.toggle('scrolly-split-active', inView);
-				if (inView) {
-					showStep(bgIndex);
-				} else {
-					videoEls.forEach(el => el?.pause());
-				}
-			},
-			{ threshold: 0 }
-		);
-		if (sectionEl) visibilityObserver.observe(sectionEl);
 	});
 
 	onDestroy(() => {
@@ -225,10 +225,9 @@
 			window.removeEventListener('scroll', onScrollOrResize);
 			window.removeEventListener('resize', onScrollOrResize);
 			window.removeEventListener('resize', measureSentinel);
-			document.body.classList.remove('scrolly-split-active');
+			document.body.classList.remove('scrolly-split-section-active');
 		}
 		observer?.disconnect();
-		visibilityObserver?.disconnect();
 	});
 </script>
 
@@ -259,12 +258,12 @@
 							class="video-layer"
 							bind:this={layerEls[i]}
 							style="position: fixed;
-							top: {videoBox.top}px;
-							left: {videoBox.left}px;
-							width: {videoBox.width}px;
-							height: {videoBox.height}px;
+							top: {videoBox.width > 0 ? videoBox.top : (videoInnerEl?.getBoundingClientRect().top ?? 0)}px;
+							left: {videoBox.width > 0 ? videoBox.left : (videoInnerEl?.getBoundingClientRect().left ?? 0)}px;
+							width: {videoBox.width > 0 ? videoBox.width : (videoInnerEl?.getBoundingClientRect().width ?? 0)}px;
+							height: {videoBox.width > 0 ? videoBox.height : (videoInnerEl?.getBoundingClientRect().height ?? 0)}px;
 							transform: translateY({(videoProgress[i] ?? (i === 0 ? 0 : 1)) * slideDistancePx}px);
-							z-index: {i + 1}; overflow: hidden; display: {videoBox.width === 0 ? 'none' : 'block'};
+							z-index: {i + 1}; overflow: hidden; display: {loadedIndices.has(i) ? 'block' : 'none'};
 							border: 15px solid #fff;
 							box-sizing: border-box;"
 						>
