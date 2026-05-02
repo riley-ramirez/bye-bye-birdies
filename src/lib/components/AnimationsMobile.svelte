@@ -76,9 +76,31 @@
   $: sortedPauses = [...pausePoints].sort((a, b) => a - b);
   $: progress = video?.duration ? currentTime / video.duration : 0;
 
-  // The single caption shown at any time — either the live one or the one fading out
   $: activeCaption = displayCaption ?? fadingCaption;
   $: isFading = !displayCaption && !!fadingCaption;
+
+  // ─── Scroll lock (mobile-optimised) ────────────────────────────────────────
+  // On iOS Safari, overflow:hidden on body does NOT prevent momentum/rubber-band
+  // scrolling. Cancelling touchmove is the only reliable fix.
+  // We also set overflow:hidden as a belt-and-suspenders for Android Chrome.
+
+  function preventTouchMove(e: TouchEvent) {
+    // Allow scrolling inside the component itself (e.g. long captions),
+    // but block any scroll that would move the page.
+    e.preventDefault();
+  }
+
+  function lockScroll() {
+    document.body.style.overflow = 'hidden';
+    // passive:false required so preventDefault() is honoured
+    document.addEventListener('touchmove', preventTouchMove, { passive: false });
+  }
+
+  function unlockScroll() {
+    document.body.style.overflow = '';
+    document.removeEventListener('touchmove', preventTouchMove);
+  }
+  // ───────────────────────────────────────────────────────────────────────────
 
   function updateCaption() {
     if (isPaused) return;
@@ -99,12 +121,10 @@
 
     if (next !== displayCaption) {
       if (!next && displayCaption) {
-        // Caption leaving — fade it out
         fadingCaption = displayCaption;
         clearTimeout(fadeTimer);
         fadeTimer = setTimeout(() => { fadingCaption = null; }, 800);
       } else if (next && displayCaption) {
-        // Switching captions — cancel any fade, show new one immediately
         fadingCaption = null;
         clearTimeout(fadeTimer);
       }
@@ -139,6 +159,7 @@
     isPaused = false;
     showTapButton = false;
     clearTimeout(tapButtonTimer);
+    unlockScroll();
   }
 
   function handleCanPlay() {
@@ -165,6 +186,9 @@
   onMount(() => {
     if (!video) return;
 
+    // Lock immediately so the user can't scroll past before the video loads
+    lockScroll();
+
     const useMobile = mobileSrc && window.innerWidth < mobileBreakpoint;
     const activeSrc = useMobile ? mobileSrc : src;
     if (activeSrc) {
@@ -175,12 +199,17 @@
 
     const observer = new IntersectionObserver(
       entries => {
-        if (entries[0].isIntersecting && !isPaused && !isEnded) {
+        if (entries[0].isIntersecting && !isEnded) {
+          lockScroll();
           video.play().catch(() => {
             isPaused = true;
             showTapButton = false;
             tapButtonTimer = setTimeout(() => { showTapButton = true; }, 400);
           });
+        } else if (!entries[0].isIntersecting && !isEnded) {
+          // Component scrolled out of view before ending — release lock so
+          // the page doesn't get stuck (e.g. user scrolled back up)
+          unlockScroll();
         }
       },
       { threshold: 0.4 }
@@ -191,6 +220,8 @@
       observer.disconnect();
       clearTimeout(tapButtonTimer);
       clearTimeout(fadeTimer);
+      // Always release on teardown — guards against unmount before video ends
+      unlockScroll();
     };
   });
 </script>
@@ -566,5 +597,4 @@
     0%, 100% { opacity: 0.3; transform: scale(0.8); }
     50%       { opacity: 1;   transform: scale(1.1); }
   }
-
 </style>

@@ -112,7 +112,7 @@
   {:else}
     <!-- fit -->
     <figure class="my-3">
-      <img src={finalSrc} alt={finalAlt} class="img-fluid border" loading="lazy" />
+      <img src={finalSrc} alt={finalAlt} class="img-fluid" loading="lazy" />
       {#if caption}
         <figcaption class="mt-2 text-muted small">{caption}</figcaption>
       {/if}

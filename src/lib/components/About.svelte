@@ -7,34 +7,52 @@
 
   let section: HTMLElement;
   let visible = false;
-  let cardY = 100; // vh offset from center, counts down to 0
-  let topFadeStop = '0%'; // how far down the fade goes on the top edge
+  let cardY = 100;
+  let topFadeStop = '0%';
+  let isMobile = true;
+  let sectionInView = false;
 
   onMount(() => {
-    const fadeObserver = new IntersectionObserver(
-      ([entry]) => {
-        if (entry.isIntersecting) {
-          visible = true;
-          fadeObserver.disconnect();
-        }
-      },
-      { threshold: 0.3 }
-    );
-    fadeObserver.observe(section);
+    isMobile = window.innerWidth < 640;
+
+    function onResize() {
+      isMobile = window.innerWidth < 640;
+    }
 
     function onScroll() {
       const rect = section.getBoundingClientRect();
       const sectionTop = rect.top;
       const vh = window.innerHeight;
 
-      // Card starts moving 30vh after video fills screen
-      const delay = vh * 0.3;
+      if (isMobile) {
+        if (sectionTop > 0) {
+          const ratio = Math.min(sectionTop / vh, 1);
+          const fadePercent = Math.round(30 + ratio * 70);
+          topFadeStop = `${fadePercent}%`;
+        } else if (sectionTop > -vh) {
+          const ratio = 1 - Math.min(-sectionTop / vh, 1);
+          const fadePercent = Math.round(ratio * 30);
+          topFadeStop = `${fadePercent}%`;
+        } else {
+          topFadeStop = '0%';
+        }
+        return;
+      }
+
+      // Desktop scroll logic
+      if (sectionTop <= 0) {
+        visible = true;
+        setTimeout(() => { sectionInView = true; }, 1800);
+      } else {
+        visible = false;
+        sectionInView = false;
+      }
+
+      const delay = vh * 0.5;
       const scrolledPastDelay = Math.max(0, -sectionTop - delay);
       const raw = 100 - (scrolledPastDelay / vh) * 100;
       cardY = Math.max(0, raw);
 
-      // Top fade: when user scrolls back up and sectionTop becomes positive,
-      // fade the top edge of the frame so outro text above is readable
       if (sectionTop > 0) {
         const ratio = Math.min(sectionTop / vh, 1);
         const fadePercent = Math.round(ratio * 900);
@@ -44,43 +62,73 @@
       }
     }
 
+    window.addEventListener('resize', onResize);
     window.addEventListener('scroll', onScroll, { passive: true });
     onScroll();
 
     return () => {
-      fadeObserver.disconnect();
+      window.removeEventListener('resize', onResize);
       window.removeEventListener('scroll', onScroll);
     };
   });
 </script>
 
 <div class="about-section" bind:this={section}>
-  <!-- Video and card share the same sticky container so they move together -->
-  <div
-    class="about-sticky-frame"
-    style="mask-image: linear-gradient(to bottom, transparent 0%, black {topFadeStop}, black 100%); -webkit-mask-image: linear-gradient(to bottom, transparent 0%, black {topFadeStop}, black 100%);"
-  >
-    <video
-      src="{base}/videos/pines.mp4"
-      autoplay
-      muted
-      loop
-      playsinline
-      preload="auto"
-      class="about-video"
-      class:visible
-    ></video>
-
+  {#if isMobile}
+    <div class="mobile-spacer"></div>
+    <div
+      class="mobile-sticky-frame"
+      style="mask-image: linear-gradient(to bottom, transparent 0%, black {topFadeStop}, black 100%);
+        -webkit-mask-image: linear-gradient(to bottom, transparent 0%, black {topFadeStop}, black 100%);"
+    >
+      <video
+        src="{base}/videos/pines.mp4"
+        autoplay
+        muted
+        loop
+        playsinline
+        preload="auto"
+        class="mobile-video"
+      ></video>
+    </div>
     {#if bodyHtml}
-      <div
-        class="about-card"
-        style="transform: translate(-50%, calc(-50% + {cardY}vh));"
-      >
+      <div class="mobile-card">
         <!-- eslint-disable-next-line svelte/no-at-html-tags -->
         <div class="about-body">{@html bodyHtml}</div>
       </div>
     {/if}
-  </div>
+
+
+  {:else}
+    <!-- DESKTOP: scroll-driven sticky layout -->
+    <div
+      class="about-sticky-frame"
+      style="mask-image: linear-gradient(to bottom, transparent 0%, black {topFadeStop}, black 100%);
+        -webkit-mask-image: linear-gradient(to bottom, transparent 0%, black {topFadeStop}, black 100%);"
+    >
+      <video
+        src="{base}/videos/pines.mp4"
+        autoplay
+        muted
+        loop
+        playsinline
+        preload="auto"
+        class="about-video"
+        class:visible
+      ></video>
+
+      {#if bodyHtml}
+        <div
+          class="about-card"
+          class:card-visible={sectionInView}
+          style="transform: translate(-50%, calc(-50% + {cardY}vh));"
+        >
+          <!-- eslint-disable-next-line svelte/no-at-html-tags -->
+          <div class="about-body">{@html bodyHtml}</div>
+        </div>
+      {/if}
+    </div>
+  {/if}
 </div>
 
 <style>
@@ -89,16 +137,51 @@
     width: 100vw;
     left: 50%;
     transform: translateX(-50%);
-    /*
-      100vh: video fills screen, card offscreen below
-      100vh: card scrolls up to center
-      100vh: video + card scroll away together
-    */
     height: 300vh;
     z-index: 0;
   }
 
-  /* Single sticky frame — video AND card are children so they exit together */
+  /* ── MOBILE ── */
+  @media (max-width: 640px) {
+    .about-section {
+      height: 500vh;
+    }
+  }
+
+  .mobile-spacer {
+    height: 75vh;
+  }
+
+  .mobile-sticky-frame {
+    position: sticky;
+    top: 0;
+    width: 100%;
+    height: 100vh;
+    overflow: hidden;
+  }
+
+  .mobile-video {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    opacity: 1;
+  }
+
+  .mobile-card {
+    position: relative;
+    z-index: 2;
+    width: 88%;
+    margin: -4rem auto 0;
+    background: rgba(255, 255, 255, 0.82);
+    backdrop-filter: blur(10px);
+    border-radius: 6px;
+    padding: 2rem;
+    box-shadow: 0 8px 48px rgba(0, 0, 0, 0.2);
+  }
+
+  /* ── DESKTOP ── */
   .about-sticky-frame {
     position: sticky;
     top: 0;
@@ -113,7 +196,7 @@
     width: 100%;
     height: 100%;
     object-fit: cover;
-    opacity: 0;
+    opacity: 0.25;
     transition: opacity 1.8s ease-out 0.3s;
   }
 
@@ -121,7 +204,6 @@
     opacity: 1;
   }
 
-  /* Card is absolutely positioned inside the sticky frame */
   .about-card {
     position: absolute;
     top: 50%;
@@ -134,8 +216,30 @@
     border-radius: 6px;
     padding: 2.5rem;
     box-shadow: 0 8px 48px rgba(0, 0, 0, 0.2);
+    max-height: 90vh;
+    overflow-y: auto;
+    scrollbar-width: thin;
+    scrollbar-color: rgba(0,0,0,0.2) transparent;
+    opacity: 0;
+    transition: opacity 1.2s ease-out;
   }
 
+  .about-card.card-visible {
+    opacity: 1;
+  }
+
+  .about-card::-webkit-scrollbar {
+    width: 4px;
+  }
+  .about-card::-webkit-scrollbar-track {
+    background: transparent;
+  }
+  .about-card::-webkit-scrollbar-thumb {
+    background: rgba(0,0,0,0.2);
+    border-radius: 2px;
+  }
+
+  /* ── Shared body text ── */
   .about-body :global(p) {
     font-size: 0.9rem;
     font-family: sans-serif;
