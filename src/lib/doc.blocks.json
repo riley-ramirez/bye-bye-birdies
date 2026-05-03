@@ -111,6 +111,7 @@
     "attrs": {
       "src": "/illustrations/grassland-map.png",
       "size": "fit",
+      "caption": "Source: Annual National Land Cover Change data, U.S. Geological Survey, 2024.",
       "alt": "Map of the Great Plains region with what grasslands remain."
     }
   },

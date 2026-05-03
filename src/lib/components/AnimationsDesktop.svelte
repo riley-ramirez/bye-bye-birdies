@@ -103,7 +103,7 @@
     ? Math.max(...overlayContent.map(c => c.end))
     : 0;
   $: overlayScrollHeight = overlayContent.length > 0
-    ? lastEnd + overlayPanelHeight * 0.5
+    ? lastEnd + overlayPanelHeight * 0
     : 0;
   $: totalScrollHeight = scrubScrollHeight + overlayScrollHeight;
 
@@ -780,7 +780,7 @@
   }
 
   :global(.fading) {
-    animation: fadeOut 1.5s ease forwards !important;
+    animation: fadeOut 1.0s ease forwards !important;
   }
 
   @keyframes fadeOut {
