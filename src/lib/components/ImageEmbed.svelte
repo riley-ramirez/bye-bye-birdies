@@ -3,7 +3,7 @@
   export let src: string | undefined;
   export let alt: string | undefined;
   export let caption: string | undefined;
-  export let size: 'full' | 'large' | 'fit' | 'inline-left' | 'inline-right' | 'margin-left' | 'margin-right' = 'large';
+  export let size: 'full' | 'large' | 'fit' | 'inline-left' | 'inline-right' | 'margin-left' | 'margin-right' | 'margin-bird' = 'large';
 
   let embeddedSrc: string | null = null;
   let embeddedAlt: string | null = null;
@@ -63,7 +63,8 @@
   $: finalAlt = (alt && alt.trim().length ? alt : embeddedAlt) ?? '';
   $: shouldRender = !!(finalSrc && finalSrc.trim().length);
   $: isInline = size === 'inline-left' || size === 'inline-right';
-  $: isMargin = size === 'margin-left' || size === 'margin-right';
+  $: isMargin = size === 'margin-left' || size === 'margin-right' || size === 'margin-bird';
+  $: marginMod = size === 'margin-left' ? 'left' : size === 'margin-right' ? 'right' : 'bird';
 </script>
 
 <!-- anchor node so we can locate the DOM position -->
@@ -102,7 +103,7 @@
     </figure>
 
   {:else if isMargin}
-    <figure class="img-margin img-margin--{size === 'margin-left' ? 'left' : 'right'}">
+    <figure class="img-margin img-margin--{marginMod}">
       <img src={finalSrc} alt={finalAlt} class="img-fluid" loading="lazy" />
       {#if caption}
         <figcaption class="mt-2 text-muted small">{caption}</figcaption>
@@ -160,12 +161,10 @@
 
   .img-margin--left {
     float: left;
-    width: 65%;
-    margin-top: 3%;
-    margin-left: -200px; /* pushes into left margin */
+    width: 45%;
+    margin-top: 5%;
+    margin-left: -290px; /* pushes into left margin */
     margin-right: 2rem;
-    rotate: -2deg;
-    filter: drop-shadow(2px 1px 2px rgba(0, 0, 0, 0.1));
   }
 
   .img-margin--right {
@@ -173,6 +172,14 @@
     margin-right: -250px; /* pushes into right margin */
     margin-left: -2rem;
     margin-top: -3rem;
+  }
+
+  .img-margin--bird {
+    float: right; /* or whatever positioning you want */
+    margin-right: -225px;
+    margin-left: 1.95rem;
+    margin-top: -3rem;
+    width: 50%;
   }
 
   .img-margin img {
