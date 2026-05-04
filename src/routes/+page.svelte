@@ -2,32 +2,109 @@
   import rawBlocks from '$lib/doc.blocks.json';
   import DocRenderer from '$lib/components/DocRenderer.svelte';
   import type { Block } from '$lib/components/DocRenderer.svelte';
+  import { base } from '$app/paths';
+  import Hero from '$lib/components/Hero.svelte';
+  import { videoReady } from '$lib/stores/videoReady';
+  import About from '$lib/components/About.svelte';
+
   const blocks = rawBlocks as Block[];
+  const PRE_HERO_COUNT = 2;
+  const preHeroBlocks = blocks.slice(0, PRE_HERO_COUNT);
+  const postHeroBlocks = blocks.slice(PRE_HERO_COUNT);
+
+  // Split at [[OutroStart]]
+  const outroIndex = postHeroBlocks.findIndex(
+    (b) => b.type === 'shortcode' && b.name === 'OutroStart'
+  );
+  const mainBlocks = outroIndex === -1 ? postHeroBlocks : postHeroBlocks.slice(0, outroIndex);
+  const afterOutro = outroIndex === -1 ? [] : postHeroBlocks.slice(outroIndex + 1);
+
+  // Pull [[About]] block out separately — render it behind the outro text
+  const aboutBlockIndex = afterOutro.findIndex(
+    (b) => b.type === 'shortcode' && b.name === 'About'
+  );
+  const aboutBlock = aboutBlockIndex !== -1 ? afterOutro[aboutBlockIndex] : null;
+  // Everything between OutroStart and About is the floating outro text
+  const outroBlocks = aboutBlockIndex !== -1
+    ? afterOutro.slice(0, aboutBlockIndex)
+    : afterOutro;
+
+  const aboutBodyHtml = aboutBlock?.type === 'shortcode'
+    ? (aboutBlock.attrs?.bodyHtml as string | undefined)
+    : undefined;
+
+  $: if ($videoReady) {
+    const loader = document.getElementById('app-loader');
+    if (loader) {
+      loader.classList.add('done');
+      loader.addEventListener('transitionend', () => loader.remove(), { once: true });
+    }
+  }
 </script>
 
+<DocRenderer blocks={preHeroBlocks} />
 
+<Hero />
 
-<!-- 
-Hard-code custom code that should appear BEFORE Google Doc here. 
-This code is in +page.svelte and can be manually coded using HTML or Svelte tags.
--->
-<header class="container-fluid d-flex flex-column align-items-center justify-content-center vh-100 mb-4" style="background-image:url('hero-example.png');background-size:cover;background-position:center;">
-  <h1 class="text-white text-center display-1">Multimedia Template 2026</h1>
-  <p class="text-white fw-light text-center">This is an example of the 2026 <a class="text-light" href="https://github.com/jrue/multimedia-template-2026" target="_blank">multimedia template</a> using Svelte.<br> This topper (header) is hard coded in <code>+page.svelte</code> file, while the rest of the page is imported from a <a class="text-light" href="https://docs.google.com/document/d/1JaxRkCqZyeWIPwXXocAwUoFaPsqULiQI_Oiby_F0JZ8/edit?usp=sharing" target="_blank">Google Doc</a>.</p>
-</header>
-
-
-<!-- DO NOT EDIT (except to modify classes). This will become code imported from Google Doc. -->
-<div class="container">
+<div class="byline container">
   <div class="row justify-content-center">
     <div class="col-12 col-sm-10 col-lg-8 col-xxl-6">
-      <DocRenderer {blocks} />
+      <div class="d-flex align-items-center gap-3">
+        <img src="{base}/images/headshot-gray.png" alt="Riley Ramirez" style="width: 55px; height: 55px; border-radius: 50%; object-fit: cover;" loading="lazy">
+        <p class="mb-0" style="line-height: 1.2;">
+          <strong>By Riley Ramirez</strong><br>
+          <span style="font-size: 1.1rem; opacity: 0.6;">UC Berkeley Graduate School of Journalism</span>
+        </p>
+      </div>
+      <p class="fw-light mt-2 mb-0" style="font-size: 0.9rem; color: grey; padding-top: 0.1rem;">
+        May 5, 2026
+      </p>
     </div>
   </div>
 </div>
 
+<!-- Main article body -->
+<div class="container">
+  <div class="row justify-content-center">
+    <div class="col-12 col-sm-10 col-lg-8 col-xxl-6">
+      <DocRenderer blocks={mainBlocks} />
+    </div>
+  </div>
+</div>
 
-<!-- Hard-code any custom code that should appear AFTER Google Doc below here. -->
-<footer class="container-fluid bg-dark text-white p-5">
-  <p class="text-center">See template on <a class="text-white" href="https://github.com/jrue/multimedia-template-2026" target="_blank">Github</a></p>
+<!-- Outro: text floats on top, About video sits behind both -->
+<div class="outro-wrap">
+  <!-- About renders first in DOM so it's behind the text -->
+  <About bodyHtml={aboutBodyHtml} />
+
+  <!-- Outro text sits on top via z-index -->
+  {#if outroBlocks.length > 0}
+    <div class="outro-text container">
+      <div class="row justify-content-center">
+        <div class="col-12 col-sm-10 col-lg-8 col-xxl-6">
+          <DocRenderer blocks={outroBlocks} />
+        </div>
+      </div>
+    </div>
+  {/if}
+</div>
+
+<footer class="container-fluid bg-dark text-white p-4">
+  <p class="text-center">This project was produced at the UC Berkeley Graduate School of Journalism.</p>
 </footer>
+
+<style>
+  .outro-wrap {
+    position: relative;
+  }
+
+  /* Outro text floats above the About video using absolute positioning */
+  .outro-text {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    z-index: 10;
+    padding-bottom: 3rem;
+  }
+</style>

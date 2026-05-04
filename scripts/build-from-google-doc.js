@@ -303,13 +303,13 @@ function compilePairedScrolly(block) {
 
 		// coerce + validate
 		const steps = arr
-			.map((x) => ({
-				img: typeof x.img === 'string' ? x.img : '',
-				alt: typeof x.alt === 'string' ? x.alt : undefined,
-				pos: x.pos === 'start' || x.pos === 'center' || x.pos === 'end' ? x.pos : 'center',
-				text: typeof x.text === 'string' ? x.text : ''
-			}))
-			.filter((s) => s.img && s.text);
+		.map((x) => ({
+			...x,
+			img: typeof x.img === 'string' ? x.img : '',
+			pos: x.pos === 'start' || x.pos === 'center' || x.pos === 'end' ? x.pos : 'center',
+			text: typeof x.text === 'string' ? x.text : '',
+		}))
+		.filter((s) => s.img);
 
 		const nextAttrs = { ...(block.attrs || {}) };
 		nextAttrs.steps = steps;

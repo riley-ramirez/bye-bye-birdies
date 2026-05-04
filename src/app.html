@@ -3,9 +3,63 @@
 	<head>
 		<meta charset="utf-8" />
 		<meta name="viewport" content="width=device-width, initial-scale=1" />
+		<link rel="stylesheet" href="%sveltekit.assets%/fonts/fonts.css" />
+		<link rel="preload" as="image" href="%sveltekit.assets%/animation/first-frame.jpg" />
+		<title>Bye Bye Birdies</title>
+		<style>
+			#app-loader {
+				position: fixed;
+				inset: 0;
+				background: #000 url('%sveltekit.assets%/animation/first-frame.jpg') center center / cover no-repeat;
+				display: flex;
+				align-items: center;
+				justify-content: center;
+				gap: 0.6rem;
+				z-index: 9999;
+				transition: opacity 0.3s ease;
+			}
+			#app-loader::before {
+				content: '';
+				position: absolute;
+				inset: 0;
+				backdrop-filter: blur(12px);
+				-webkit-backdrop-filter: blur(12px);
+				background: rgba(0, 0, 0, 0.15);
+				z-index: 0;
+			}
+			#app-loader span {
+				width: 12px;
+				height: 12px;
+				border-radius: 50%;
+				background: white;
+				box-shadow: 0 2px 8px rgba(0,0,0,0.3);
+				animation: pulse 1.2s ease-in-out infinite;
+				position: relative;
+				z-index: 1;
+			}
+			#app-loader span:nth-child(2) { animation-delay: 0.2s; }
+			#app-loader span:nth-child(3) { animation-delay: 0.4s; }
+			@keyframes pulse {
+				0%, 100% { opacity: 0.3; transform: scale(0.8); }
+				50%       { opacity: 1;   transform: scale(1.1); }
+			}
+			#app-loader.done {
+				opacity: 0;
+				pointer-events: none;
+			}
+		</style>
 		%sveltekit.head%
 	</head>
 	<body data-sveltekit-preload-data="hover">
+		<script>
+			if (history.scrollRestoration) {
+				history.scrollRestoration = 'manual';
+			}
+			window.scrollTo(0, 0);
+		</script>
+		<div id="app-loader">
+			<span></span><span></span><span></span>
+		</div>
 		<div style="display: contents">%sveltekit.body%</div>
 	</body>
 </html>

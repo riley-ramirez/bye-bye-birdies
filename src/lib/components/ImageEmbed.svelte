@@ -3,16 +3,19 @@
   export let src: string | undefined;
   export let alt: string | undefined;
   export let caption: string | undefined;
-  export let size: 'full' | 'large' | 'fit' = 'large';
+  export let size: 'full' | 'large' | 'fit' | 'inline-left' | 'inline-right' | 'margin-left' | 'margin-right' | 'margin-bird' = 'large';
 
   let embeddedSrc: string | null = null;
   let embeddedAlt: string | null = null;
 
+  import { base } from '$app/paths';
+
   function normalizeStaticPath(raw: string) {
     const s = raw.trim();
     if (/^data:/i.test(s) || /^https?:\/\//i.test(s)) return s;
-    if (s.startsWith('/')) return s;
-    return '/' + s;
+
+    if (s.startsWith('/')) return base + s;
+    return base + '/' + s;
   }
 
   import { onMount } from 'svelte';
@@ -51,9 +54,17 @@
     }
   });
 
-  $: finalSrc = src ? normalizeStaticPath(src) : embeddedSrc;
+  $: finalSrc = src
+  ? normalizeStaticPath(src)
+  : embeddedSrc
+    ? normalizeStaticPath(embeddedSrc)
+    : null;
+    
   $: finalAlt = (alt && alt.trim().length ? alt : embeddedAlt) ?? '';
   $: shouldRender = !!(finalSrc && finalSrc.trim().length);
+  $: isInline = size === 'inline-left' || size === 'inline-right';
+  $: isMargin = size === 'margin-left' || size === 'margin-right' || size === 'margin-bird';
+  $: marginMod = size === 'margin-left' ? 'left' : size === 'margin-right' ? 'right' : 'bird';
 </script>
 
 <!-- anchor node so we can locate the DOM position -->
@@ -61,10 +72,10 @@
 
 {#if shouldRender}
   {#if size === 'full'}
-    <figure class="my-3 full-bleed">
-      <img src={finalSrc} alt={finalAlt} class="img-fluid border" />
+    <figure class="full-bleed" style="margin-top: 6rem; margin-bottom: 3rem;">
+      <img src={finalSrc} alt={finalAlt} class="img-fluid border"/>
       {#if caption}
-        <figcaption class="mt-2 text-muted small">{caption}</figcaption>
+        <figcaption class="mt-2 text-muted text-left" style="font-family: Azeret Mono, monospace; font-size: small; margin-left: 2rem;">{caption}</figcaption>
       {/if}
     </figure>
 
@@ -74,22 +85,116 @@
       <div class="container-fluid">
         <div class="row justify-content-center">
           <div class="col-12 col-lg-10 col-xxl-8">
-            <img src={finalSrc} alt={finalAlt} class="img-fluid border" />
+            <img src={finalSrc} alt={finalAlt} class="img-fluid border" loading="lazy" />
             {#if caption}
-              <figcaption class="mt-2 text-muted small">{caption}</figcaption>
+              <figcaption class="mt-2 text-muted text-left" style="font-family: Azeret Mono, monospace; font-size: small;">{caption}</figcaption>
             {/if}
           </div>
         </div>
       </div>
     </figure>
 
+  {:else if isInline}
+    <figure class="img-inline img-inline--{size === 'inline-left' ? 'left' : 'right'}">
+      <img src={finalSrc} alt={finalAlt} class="img-fluid" loading="lazy" />
+      {#if caption}
+        <figcaption class="mt-2 text-muted small">{caption}</figcaption>
+      {/if}
+    </figure>
+
+  {:else if isMargin}
+    <figure class="img-margin img-margin--{marginMod}">
+      <img src={finalSrc} alt={finalAlt} class="img-fluid" loading="lazy" />
+      {#if caption}
+        <figcaption class="mt-2 text-muted small">{caption}</figcaption>
+      {/if}
+    </figure>
+
   {:else}
     <!-- fit -->
     <figure class="my-3">
-      <img src={finalSrc} alt={finalAlt} class="img-fluid border" />
+      <img src={finalSrc} alt={finalAlt} class="img-fluid" loading="lazy" />
       {#if caption}
         <figcaption class="mt-2 text-muted small">{caption}</figcaption>
       {/if}
     </figure>
   {/if}
 {/if}
+
+<style>
+  .img-inline {
+    width: 45%;
+    max-width: 45%;
+    margin-top: 0.25em;
+  }
+
+  .img-inline--left {
+    float: left;
+    margin-right: 1.25rem;
+    margin-bottom: 0.75rem;
+  }
+
+  .img-inline--right {
+    float: right;
+    margin-left: 1.25rem;
+    margin-bottom: 0rem;
+    rotate: 1.5deg;
+    filter: drop-shadow(2px 0px 2px rgba(0, 0, 0, 0.3));
+  }
+
+  .img-inline img {
+    width: 100%;
+    height: auto;
+    display: block;
+  }
+
+  /* Clear floats when the inline image is inside a block that doesn't stretch */
+  .img-inline + :global(p)  {
+    overflow: visible; /* let the paragraph flow around the float naturally */
+  }
+
+  .img-margin {
+    width: 60%;
+    position: relative;
+    z-index: 0;
+  }
+
+  .img-margin--left {
+    float: left;
+    width: 45%;
+    margin-top: 5%;
+    margin-left: -290px; /* pushes into left margin */
+    margin-right: 2rem;
+  }
+
+  .img-margin--right {
+    float: right;
+    margin-right: -250px; /* pushes into right margin */
+    margin-left: -2rem;
+    margin-top: -3rem;
+  }
+
+  .img-margin--bird {
+    float: right; /* or whatever positioning you want */
+    margin-right: -225px;
+    margin-left: 1.95rem;
+    margin-top: -3rem;
+    width: 50%;
+  }
+
+  .img-margin img {
+    width: 100%;
+    height: auto;
+    display: block;
+  }
+
+  @media (max-width: 992px) {
+    .img-margin {
+      float: none;
+      margin: 1rem auto;
+      width: 100%;
+      max-width: 500px;
+    }
+  }
+
+</style>

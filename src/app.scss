@@ -1,5 +1,27 @@
 @import "/fonts/fonts.css";
 
+.step .bg-body-secondary {
+  background-color: rgba(1, 19, 60, 0.8) !important; /* 80% opacity */
+  color: white;
+  border-radius: 0.5rem;
+  padding: 2rem;
+  font-size: 20px;
+
+  max-width: 900px;
+  margin: 0 auto;
+}
+
+/* THIS is the important selector */
+.step .bg-body-secondary > * {
+  max-width: 600px;   /* controls line length */
+  width: 100%;
+  margin: 0 auto;     /* centers the text block */
+  text-align: left;
+}
+
+$link-color: #000000;
+
+
 /*************
 Bootstrap configuration overrides must be BEFORE importing Bootstrap. 
 List of options here: https://getbootstrap.com/docs/5.3/customize/options/
@@ -7,18 +29,18 @@ List of options here: https://getbootstrap.com/docs/5.3/customize/options/
 
 
 
-$font-family-sans-serif: 'Lato', system-ui, -apple-system, 'Segoe UI', sans-serif;
-$font-size-base: 1.1rem;
+$font-family-sans-serif: 'Georgia','Helvetica', Arial, sans-serif;
+$font-size-base: 1.2rem;
 $font-weight-base: 400;
 $line-height-base: 1.6;
 
-$headings-font-family: 'Roboto Slab', 'Lato', serif;
+$headings-font-family: 'Georgia', 'Times New Roman', serif;
 $headings-font-style: null;
 $headings-font-weight: 500;
 $headings-line-height: 1.2;
-$headings-color: #404040;
+$headings-color: #181818;
 
-$display-font-family: 'Crimson Text', 'Roboto Slab', Garamond, 'Times New Roman', serif;
+$display-font-family: 'Georgia', 'Times New Roman', serif;
 $display-font-style:  null;
 $display-font-weight: 300;
 $display-line-height: $headings-line-height;
@@ -34,7 +56,9 @@ $small-font-size: .875em;
 Any project-wide styles should go AFTER the Bootsrap import 
 ************/
 
-
+html {
+  overflow-x: hidden;
+}
 
 html, body {
   height: 100%;
@@ -42,6 +66,9 @@ html, body {
   -moz-osx-font-smoothing: auto;
 }
 
+body {
+  background: white;
+}
 
 /* Break out of the centered container to full viewport width */
 .full-bleed {
@@ -52,3 +79,46 @@ html, body {
   margin-left: -50vw;
   margin-right: -50vw;
 }
+
+.bg-video {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: top; 
+  z-index: 0;
+}
+
+.byline {
+  font-family: Arial, Helvetica, sans-serif;
+  font-size: 1.1rem;
+  font-weight: 400;
+  margin-top: 7rem;
+  padding-bottom: 1rem;
+}
+
+.scrolly-bg {
+  background: black;
+}
+
+.layer {
+  will-change: opacity;
+  transform: translateZ(0);
+  backface-visibility: hidden;
+}
+
+.doc-html-block {
+  padding-top: 2rem;
+  padding-bottom: 2rem;
+}
+
+::-webkit-scrollbar {
+  display: none;
+}
+
+* {
+  scrollbar-width: none;
+}
+

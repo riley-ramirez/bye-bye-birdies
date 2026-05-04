@@ -1,5 +1,9 @@
 <!-- src/lib/components/VideoEmbed.svelte -->
 <script lang="ts">
+  import { base } from '$app/paths';
+  import { onDestroy, onMount } from 'svelte';
+  import { browser } from '$app/environment';
+
   export let src: string | undefined;
 
   export let title: string = '';
@@ -11,6 +15,7 @@
   export let controls: boolean | string | undefined = true;
   export let playsinline: boolean | string | undefined = true;
   export let mute: boolean | string | undefined = false;
+  export let loop: boolean | string | undefined = false;
 
   // Optional: for local files, allow captions track served from /static
   // Example shortcode: captions="/captions/my-video.vtt" srclang="en" label="English"
@@ -18,7 +23,7 @@
   export let credit: string | undefined;
   export let srclang: string = 'en';
   export let label: string = 'English';
-  
+
   // if they use credit, degrade gracefully to caption
   $: effectiveCaption = caption ?? (credit ? `credit: ${credit}` : undefined);
 
@@ -90,13 +95,10 @@
   }
 
   function normalizeStaticPath(raw: string) {
-    // If it's already absolute http(s), keep it.
     const s = raw.trim();
     if (/^https?:\/\//i.test(s)) return s;
-
-    // Otherwise assume in /static (served at /...)
-    if (s.startsWith('/')) return s;
-    return '/' + s;
+    if (s.startsWith('/')) return `${base}${s}`;
+    return `${base}/${s}`;
   }
 
   type Resolved =
@@ -126,7 +128,7 @@
 
     if (isYouTubeHost(u.hostname)) {
       const id = extractYouTubeId(u);
-      
+
       if (!id) return null;
 
       const params = new URLSearchParams();
@@ -134,9 +136,12 @@
       params.set('controls', controlsBool ? '1' : '0');
       if (playsinlineBool) params.set('playsinline', '1');
       params.set('rel', '0');
+      params.set('loop', '1');
 
       // YouTube: autoplay often requires muted
       if (muteBool) params.set('mute', '1');
+
+      if (toBool(loop, false)) params.set('loop', '1');
 
       const qs = params.toString();
       const embedUrl = `https://www.youtube-nocookie.com/embed/${encodeURIComponent(id)}${
@@ -157,6 +162,7 @@
 
       // Vimeo: autoplay often requires muted
       if (muteBool) params.set('muted', '1');
+      if (toBool(loop, false)) params.set('loop', '1');
 
       const qs = params.toString();
       const embedUrl = `https://player.vimeo.com/video/${encodeURIComponent(id)}${
@@ -174,19 +180,56 @@
   // Normalize captions path if present (assume /static)
   $: captionsSrc = captions ? normalizeStaticPath(captions) : undefined;
 
-  // Layout helpers
-  $: wrapClass = 'float-md-start me-md-3 mb-3';
-  const wrapStyle = 'max-width: 420px;';
-
   $: autoplayBool = toBool(autoplay, false);
   $: controlsBool = toBool(controls, true);
   $: playsinlineBool = toBool(playsinline, true);
   $: muteBool = toBool(mute, false);
+  $: loopBool = toBool(loop, false);
+
+  // ---- Lazy-load for iframes ----
+  // `nearViewport` gates whether the iframe src is set.
+  // For file-based <video> tags we use the native `preload="none"` + the
+  // browser's own lazy-load; the observer still preloads the wrapper early.
+  let figureEl: HTMLElement | null = null;
+  let nearViewport = false;
+  let observer: IntersectionObserver | null = null;
+
+  // Derived: the actual src we hand to the iframe (null until near viewport)
+  $: iframeSrc =
+    nearViewport && resolved && resolved.kind !== 'file' ? resolved.embedUrl : null;
+
+  onMount(() => {
+    if (!browser || !figureEl) return;
+
+    // If the embed is already in or near the viewport on mount, skip the observer.
+    const rect = figureEl.getBoundingClientRect();
+    if (rect.top < window.innerHeight + 1500) {
+      nearViewport = true;
+      return;
+    }
+
+    observer = new IntersectionObserver(
+      (entries) => {
+        if (!entries[0].isIntersecting) return;
+        nearViewport = true;
+        observer?.disconnect();
+        observer = null;
+      },
+      // 1500 px ahead — iframe players need a big head start for network negotiation
+      { rootMargin: '1500px 0px' }
+    );
+
+    observer.observe(figureEl);
+  });
+
+  onDestroy(() => {
+    observer?.disconnect();
+  });
 </script>
 
 {#if resolved}
   {#if normalizedSize === 'full'}
-    <figure class="my-3 full-bleed">
+    <figure class="my-3 full-bleed" bind:this={figureEl}>
       <div class="ratio ratio-16x9">
         {#if resolved.kind === 'file'}
           <!-- svelte-ignore a11y_media_has_caption -->
@@ -197,29 +240,33 @@
             autoplay={autoplayBool}
             controls={controlsBool}
             muted={muteBool}
+            loop={loopBool}
             playsinline={playsinlineBool}
+            preload="none"
           >
             {#if captionsSrc}
               <track kind="captions" src={captionsSrc} srclang={srclang} label={label} default />
             {/if}
           </video>
-        {:else}
+        {:else if iframeSrc}
           <iframe
-            src={resolved.embedUrl}
+            src={iframeSrc}
             title={title}
             allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
             allowfullscreen
           ></iframe>
+        {:else}
+          <!-- Placeholder holds the aspect-ratio box while the iframe hasn't loaded yet -->
+          <div class="iframe-placeholder"></div>
         {/if}
       </div>
-
       {#if caption}
-        <figcaption class="mt-2 text-muted small">{caption}</figcaption>
+        <figcaption class="mt-2 text-muted text-left" style="font-family: Azeret Mono, monospace; font-size: small;">{caption}</figcaption>
       {/if}
     </figure>
 
   {:else if normalizedSize === 'large'}
-    <figure class="my-3 full-bleed">
+    <figure class="my-3 full-bleed" bind:this={figureEl}>
       <div class="container-fluid">
         <div class="row justify-content-center">
           <div class="col-12 col-lg-10 col-xxl-8">
@@ -234,60 +281,86 @@
                   controls={controlsBool}
                   muted={muteBool}
                   playsinline={playsinlineBool}
+                  preload="none"
                 >
                   {#if captionsSrc}
                     <track kind="captions" src={captionsSrc} srclang={srclang} label={label} default />
                   {/if}
                 </video>
-              {:else}
+              {:else if iframeSrc}
                 <iframe
-                  src={resolved.embedUrl}
+                  src={iframeSrc}
                   title={title}
                   allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
                   allowfullscreen
                 ></iframe>
+              {:else}
+                <div class="iframe-placeholder"></div>
               {/if}
             </div>
           </div>
         </div>
       </div>
-
       {#if caption}
-        <figcaption class="mt-2 text-muted small text-center">{caption}</figcaption>
+        <figcaption class="mt-2 text-muted text-center" style="font-family: Azeret Mono, monospace; font-size: small;">{caption}</figcaption>
       {/if}
     </figure>
 
   {:else if normalizedSize === 'fit'}
-    <figure class="my-3">
-      <div class="ratio ratio-16x9">
-        {#if resolved.kind === 'file'}
-          <!-- svelte-ignore a11y_media_has_caption -->
-          <video
-            src={resolved.fileUrl}
-            title={title}
-            class="w-100 h-100"
-            autoplay={autoplayBool}
-            controls={controlsBool}
-            muted={muteBool}
-            playsinline={playsinlineBool}
-          >
-            {#if captionsSrc}
-              <track kind="captions" src={captionsSrc} srclang={srclang} label={label} default />
-            {/if}
-          </video>
-        {:else}
-          <iframe
-            src={resolved.embedUrl}
-            title={title}
-            allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-            allowfullscreen
-          ></iframe>
+    <figure class="my-3" bind:this={figureEl}>
+      <div class="polaroid">
+        <div class="ratio ratio-16x9">
+          {#if resolved.kind === 'file'}
+            <!-- svelte-ignore a11y_media_has_caption -->
+            <video
+              src={resolved.fileUrl}
+              title={title}
+              class="w-100 h-100"
+              autoplay={autoplayBool}
+              controls={controlsBool}
+              muted={muteBool}
+              playsinline={playsinlineBool}
+              preload="none"
+            >
+              {#if captionsSrc}
+                <track kind="captions" src={captionsSrc} srclang={srclang} label={label} default />
+              {/if}
+            </video>
+          {:else if iframeSrc}
+            <iframe
+              src={iframeSrc}
+              title={title}
+              allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+              allowfullscreen
+            ></iframe>
+          {:else}
+            <div class="iframe-placeholder"></div>
+          {/if}
+        </div>
+        {#if caption}
+          <!-- svelte-ignore a11y_figcaption_parent -->
+          <figcaption class="mt-2 text-muted text-left" style="font-family: Azeret Mono, monospace; font-size: small; margin-left: 1rem;">{caption}</figcaption>
         {/if}
       </div>
-
-      {#if caption}
-        <figcaption class="mt-2 text-muted small text-center">{caption}</figcaption>
-      {/if}
     </figure>
   {/if}
 {/if}
+
+<style>
+  .polaroid {
+    background: rgb(255, 255, 255);
+    padding: 10px 10px 10px 10px;
+    box-shadow: 2px 4px 12px rgba(0, 0, 0, 0.15);
+    display: inline-block;
+    width: 100%;
+    margin-bottom: 1.5rem;
+  }
+
+  /* Holds the 16:9 box while the iframe hasn't been injected yet.
+     Intentionally no visible style — the ratio wrapper already reserves space. */
+  .iframe-placeholder {
+    position: absolute;
+    inset: 0;
+    background: transparent;
+  }
+</style>
