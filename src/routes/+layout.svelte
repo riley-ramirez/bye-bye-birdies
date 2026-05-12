@@ -18,6 +18,7 @@
 
 <svelte:head>
 	<link rel="icon" href={favicon} />
+  	<link rel="stylesheet" href="https://use.typekit.net/fin7qjo.css">
 </svelte:head>
 
 <ProgressBar />

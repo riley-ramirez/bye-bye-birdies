@@ -302,7 +302,7 @@
         </div>
       </div>
       {#if caption}
-        <figcaption class="mt-2 text-muted text-center" style="font-family: Azeret Mono, monospace; font-size: small;">{caption}</figcaption>
+        <figcaption class="mt-2 text-muted text-center" style="font-size: small;">{caption}</figcaption>
       {/if}
     </figure>
 
@@ -339,7 +339,7 @@
         </div>
         {#if caption}
           <!-- svelte-ignore a11y_figcaption_parent -->
-          <figcaption class="mt-2 text-muted text-left" style="font-family: Azeret Mono, monospace; font-size: small; margin-left: 1rem;">{caption}</figcaption>
+          <figcaption class="mt-2 text-muted text-left" style='font-family: "lumios-typewriter-new", elegant typewriter light, monospace; font-size: small; margin-left: 0.5rem;'>{caption}</figcaption>
         {/if}
       </div>
     </figure>

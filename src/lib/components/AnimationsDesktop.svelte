@@ -759,18 +759,18 @@
   /* ── Caption ───────────────────────────────────────────── */
   .caption {
     position: absolute;
-    bottom: 44%;
+    bottom: 43%;
     left: 26.5%;
     transform: translateX(-50%);
     color: white;
-    font-family: 'Azeret Mono', monospace;
-    font-size: 2rem;
-    font-weight: 550;
+    font-family: "lumios-typewriter-new", elegant typewriter light, monospace;
+    font-size: 2.15rem;
+    font-weight: 600;
     text-align: left;
     max-width: 40%;
     padding: 0.5rem 1rem;
     animation: fadeIn 0.77s ease;
-    line-height: 2rem;
+    line-height: 3rem;
     z-index: 2;
   }
 
@@ -809,10 +809,10 @@
 
   .overlay-text {
     color: rgb(0, 0, 0);
-    font-family: 'Azeret Mono', monospace;
-    font-size: 1.5rem;
-    font-weight: 300;
-    line-height: 1.8rem;
+    font-family: "lumios-typewriter-new", elegant typewriter light, monospace;
+    font-size: 1.65rem;
+    font-weight: 200;
+    line-height: 2.1rem;
     max-width: 40%;
     margin: 0;
   }
@@ -839,9 +839,9 @@
 
   .sub-caption {
     color: rgb(0, 0, 0);
-    font-family: 'Azeret Mono', monospace;
+    font-family: Azeret Mono, monospace;
     font-size: 0.70rem;
-    font-weight: 300;
+    font-weight: 400;
     margin-top: 0.3rem;
     margin-left: 10%;
     text-align: left;
@@ -855,20 +855,20 @@
     flex-direction: column;
     align-items: center;
     justify-content: center;
-    margin-top: 5%;
+    margin-top: 8.5%;
   }
 
   .overlay-panel[data-block="three"] .overlay-text {
     text-align: left;
-    max-width: 50%;
+    max-width: 60%;
     z-index: 2;
   }
 
   .overlay-panel[data-block="three"] .overlay-image {
-    width: 25%;
+    width: 32%;
     object-fit: contain;
-    margin-top: -6rem;
-    margin-left: 55%;
+    margin-top: -10%;
+    margin-left: 62%;
     order: 2;
     z-index: 1;
   }

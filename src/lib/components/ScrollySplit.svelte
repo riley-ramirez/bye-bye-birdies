@@ -165,8 +165,11 @@
 		const cardTop = lastCard.getBoundingClientRect().top + window.scrollY;
 
 		const currentSectionHeight = sectionEl.offsetHeight;
-		const lastCardHeight = lastCard.offsetHeight;
-		const neededSectionHeight = (cardTop - sectionTop) + window.innerHeight - (2 * videoTop) + (slideDistancePx * 0.15) + (lastCardHeight * -0.6);
+
+		// We want the last card's top to align with the top of the video
+		// at the moment the section unsticks (sectionBottom == vh).
+		// At that moment the card needs to be at videoBox.top in the viewport.
+		const neededSectionHeight = (cardTop - sectionTop) + window.innerHeight - videoTop;
 		const sentinelHeight = Math.max(0, neededSectionHeight - currentSectionHeight + sentinelEl.offsetHeight);
 
 		sentinelEl.style.height = sentinelHeight + 'px';
@@ -369,7 +372,7 @@
 		justify-content: flex-start;
 		gap: 1rem;
 		z-index: 2;
-		max-width: 280px;
+		max-width: 300px;
 	}
 
 	.split-header-img {
@@ -382,9 +385,9 @@
 
 	.split-subtext {
 		margin: 0;
-		font-size: 0.95rem;
-		line-height: 1.25;
-		font-family: Azeret Mono, monospace;
+		font-size: 1.01rem;
+		line-height: 1.4rem;
+		font-family: "lumios-typewriter-new", elegant typewriter light, monospace;
 		text-align: right;
 	}
 
@@ -490,7 +493,7 @@
 			text-align: right;
 			font-size: 0.95rem;
 			line-height: 1.25;
-			font-family: Azeret Mono, monospace;
+			font-family: Elegant Typewriter, serif;
 			margin: 0.5rem 0 0 0;
 		}
 
@@ -533,7 +536,7 @@
 			padding: 1.5rem;
 			font-size: 0.90rem;
 			line-height: 1.25;
-			font-family: Azeret Mono, monospace;
+			font-family: Elegant Typewriter, serif;
 		}
 
 		.split-header-col {

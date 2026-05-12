@@ -247,12 +247,12 @@
   }
 
   .caption {
-    margin: 2rem 13rem 0 5rem;
+    margin: 2rem 12rem 0 5rem;
     padding-left: 1.5rem;
     width: 100%;
     max-width: 60%;
-    font-size: 0.85rem;
-    font-family: Azeret Mono, monospace;
+    font-size: 1.01rem;
+    font-family: "lumios-typewriter-new", elegant typewriter light, monospace;
     line-height: 1.6;
     text-align: left;
   }
@@ -281,7 +281,7 @@
   }
 
   /* ── Mobile ── */
-  @media (max-width: 768px) {
+  @media (max-width: 1180px) {
     .collage-bleed {
       width: 100%;
       position: static;

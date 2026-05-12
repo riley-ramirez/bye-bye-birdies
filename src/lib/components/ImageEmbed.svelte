@@ -75,19 +75,19 @@
     <figure class="full-bleed" style="margin-top: 6rem; margin-bottom: 3rem;">
       <img src={finalSrc} alt={finalAlt} class="img-fluid border"/>
       {#if caption}
-        <figcaption class="mt-2 text-muted text-left" style="font-family: Azeret Mono, monospace; font-size: small; margin-left: 2rem;">{caption}</figcaption>
+        <figcaption class="mt-2 text-muted text-left" style="font-size: small; margin-left: 2rem;">{caption}</figcaption>
       {/if}
     </figure>
 
   {:else if size === 'large'}
     <!-- svelte-ignore a11y_figcaption_parent -->
-    <figure class="my-3 full-bleed">
-      <div class="container-fluid">
+    <figure class="my-3 full-bleed" >
+      <div class="container-fluid" style="margin-top: 3rem; margin-bottom: 3rem;">
         <div class="row justify-content-center">
           <div class="col-12 col-lg-10 col-xxl-8">
-            <img src={finalSrc} alt={finalAlt} class="img-fluid border" loading="lazy" />
+            <img src={finalSrc} alt={finalAlt} class="img-fluid" loading="lazy" />
             {#if caption}
-              <figcaption class="mt-2 text-muted text-left" style="font-family: Azeret Mono, monospace; font-size: small;">{caption}</figcaption>
+              <figcaption class="mt-2 text-muted text-left" style="font-size: small;">{caption}</figcaption>
             {/if}
           </div>
         </div>
@@ -161,25 +161,29 @@
 
   .img-margin--left {
     float: left;
-    width: 45%;
-    margin-top: 5%;
-    margin-left: -290px; /* pushes into left margin */
-    margin-right: 2rem;
+    width: 70%;
+    margin-top: -1%;
+    margin-left: -300px; /* pushes into left margin */
+    margin-right: 1rem;
+    margin-bottom: -7%;
   }
 
   .img-margin--right {
     float: right;
-    margin-right: -250px; /* pushes into right margin */
-    margin-left: -2rem;
-    margin-top: -3rem;
+    width: 87%;
+    margin-right: -360px; /* pushes into right margin */
+    margin-left: -1rem;
+    margin-top: -7%;
+    margin-bottom: -20%;
   }
 
   .img-margin--bird {
     float: right; /* or whatever positioning you want */
-    margin-right: -225px;
-    margin-left: 1.95rem;
-    margin-top: -3rem;
-    width: 50%;
+    margin-right: -345px;
+    margin-left: 1rem;
+    margin-top: -9.2rem;
+    margin-bottom: -4rem;
+    width: 75%;
   }
 
   .img-margin img {
@@ -188,7 +192,7 @@
     display: block;
   }
 
-  @media (max-width: 992px) {
+  @media (max-width: 1300px) {
     .img-margin {
       float: none;
       margin: 1rem auto;

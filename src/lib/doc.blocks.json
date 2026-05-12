@@ -58,7 +58,7 @@
   },
   {
     "type": "html",
-    "html": "<p>Climate change and cuts to laws and governmental funding that protect birds and their habitats has exacerbated the downward trend of grassland bird populations. </p>\n<p>And because in the past scientists almost exclusively studied these species on their northern breeding grounds, a lack of understanding about the long distance movements and survival of grassland birds posed significant challenges in creating effective and long-lasting conservation practices. &nbsp;</p>\n<p>To address this, researchers started investing in a tracking system to fill in the gaps and help them to assess where to focus conservation efforts and how to strategically recover species.</p>\n<p>&ldquo;Grasslands are the lifeblood of the central part of the U.S. and if they disappear, then this landscape will be drastically altered,&rdquo; Brandt Ryder, chief conservation scientist at Bird Conservancy of the Rockies, said. </p>"
+    "html": "<p>Climate change and cuts to laws and governmental funding that protect birds and their habitats has exacerbated the downward trend of grassland bird populations. </p>\n<p>And because in the past scientists almost exclusively studied these species on their northern breeding grounds, a lack of understanding about the long distance movements and survival of grassland birds posed significant challenges in creating effective and long-lasting conservation practices. </p>\n<p>To address this, researchers started investing in a tracking system to fill in the gaps and help them to assess where to focus conservation efforts and how to strategically recover species.</p>\n<p>&ldquo;Grasslands are the lifeblood of the central part of the U.S. and if they disappear, then this landscape will be drastically altered,&rdquo; Brandt Ryder, chief conservation scientist at Bird Conservancy of the Rockies, said. </p>"
   },
   {
     "type": "shortcode",
@@ -110,7 +110,7 @@
     "name": "ImageEmbed",
     "attrs": {
       "src": "/illustrations/grassland-map.png",
-      "size": "fit",
+      "size": "large",
       "caption": "Source: Annual National Land Cover Change data, U.S. Geological Survey, 2024.",
       "alt": "Map of the Great Plains region with what grasslands remain."
     }
@@ -153,7 +153,7 @@
     "name": "ImageEmbed",
     "attrs": {
       "src": "/images/cows.JPG",
-      "size": "full",
+      "size": "large",
       "alt": "Cows on Switzer Ranch, Loup County, Nebraska.",
       "caption": "Cows on Switzer Ranch, Loup County, Nebraska. Photo courtesy of Sarah Sortum."
     }

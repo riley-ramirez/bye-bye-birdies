@@ -61,10 +61,10 @@
 	}
 
 	.step-body {
-		font-size: 0.90rem;
-		line-height: 1.25;
 		color: black;
-		font-family: Azeret Mono, monospace;
+		font-size: 1.01rem;
+		line-height: 1.4rem;
+		font-family: "lumios-typewriter-new", elegant typewriter light, monospace;
 	}
 
 	/* Force all headings inside step content to use the same font */
@@ -74,8 +74,8 @@
 	.step-body :global(h4),
 	.step-body :global(h5),
 	.step-body :global(h6) {
-		font-family: Azeret Mono, monospace;
-		font-weight: 600;
+		font-family: Elegant Typewriter Light, serif;
+		font-weight: 200;
 		margin-bottom: 1.5rem;
 	}
 

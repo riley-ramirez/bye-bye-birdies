@@ -157,3 +157,20 @@
   font-weight: 600;
   src: url('/fonts/azeret-mono/AzeretMono-Regular.ttf') format('ttf');
 }
+
+@font-face {
+  font-display: swap;
+  font-family: 'Elegant Typewriter';
+  font-style: normal;
+  font-weight: 400;
+  src: url('/fonts/elegant_typewriter/elegant-typewriter-regular.ttf') format('truetype');
+}
+
+@font-face {
+  font-display: swap;
+  font-family: 'Elegant Typewriter light';
+  font-style: normal;
+  font-weight: 200;
+  src: url('/fonts/elegant_typewriter/elegant-typewriter-light.ttf') format('truetype');
+}
+

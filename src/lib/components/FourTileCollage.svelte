@@ -198,12 +198,12 @@
     flex: 1;
     min-width: 0;
     margin: 0;
-    margin-left: 10rem;
+    margin-left: 8rem;
     margin-right: 2.5rem;
     margin-bottom: 1rem;
     padding: 0 8px 4px 0;
-    font-size: 0.85rem;
-    font-family: Azeret Mono, monospace;
+    font-size: 1.01rem;
+    font-family: "lumios-typewriter-new", elegant typewriter light, monospace;
     line-height: 1.6;
     text-align: left;
     align-self: flex-end;
@@ -281,7 +281,7 @@
     margin-bottom: 1rem;
   }
 
-  @media (max-width: 768px) {
+  @media (max-width: 1180px) {
     .collage-bleed {
       width: 100%;
       position: static;

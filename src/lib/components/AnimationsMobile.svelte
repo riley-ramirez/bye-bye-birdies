@@ -408,7 +408,7 @@
   .caption-row--caption-four { top: 15%; }
 
   .caption-text {
-    font-family: 'Azeret Mono', monospace;
+    font-family: "lumios-typewriter-new", elegant typewriter light, monospace;
     font-weight: 400;
     white-space: normal;
     overflow-wrap: break-word;
