@@ -181,8 +181,8 @@
     float: right; /* or whatever positioning you want */
     margin-right: -345px;
     margin-left: 1rem;
-    margin-top: -9.2rem;
-    margin-bottom: -4rem;
+    margin-top: -8.5rem;
+    margin-bottom: -3rem;
     width: 75%;
   }
 
