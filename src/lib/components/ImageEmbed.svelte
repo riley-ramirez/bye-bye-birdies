@@ -75,7 +75,7 @@
     <figure class="full-bleed" style="margin-top: 6rem; margin-bottom: 3rem;">
       <img src={finalSrc} alt={finalAlt} class="img-fluid border"/>
       {#if caption}
-        <figcaption class="mt-2 text-muted text-left" style="font-size: small; margin-left: 2rem;">{caption}</figcaption>
+        <figcaption class="mt-2 text-muted text-left" style="font-size: small; margin-left: 1rem;">{caption}</figcaption>
       {/if}
     </figure>
 

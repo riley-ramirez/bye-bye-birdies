@@ -153,7 +153,7 @@
     "name": "ImageEmbed",
     "attrs": {
       "src": "/images/cows.JPG",
-      "size": "large",
+      "size": "full",
       "alt": "Cows on Switzer Ranch, Loup County, Nebraska.",
       "caption": "Cows on Switzer Ranch, Loup County, Nebraska. Photo courtesy of Sarah Sortum."
     }
